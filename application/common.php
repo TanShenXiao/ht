@@ -1479,3 +1479,19 @@ if (!function_exists('dp_send_message')) {
         return false !== $MessageModel->saveAll($list);
     }
 }
+
+if (!function_exists('t')) {
+    /**
+     * @param $data
+     * @param bool $is_exit
+     * @param string $lable
+     * @author Owen <766763918@qq.com>  2019/7/2 0002 17:53
+     */
+    function t($data,$is_exit = true,$lable='') {
+        echo '<pre>';
+        if($lable) echo "{$lable}<hr>";
+        print_r($data);
+
+        if($is_exit) exit;
+    }
+}

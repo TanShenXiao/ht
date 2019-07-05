@@ -20,6 +20,7 @@ if (version_compare(PHP_VERSION, '5.6', '<')) {
 
 // 定义应用目录
 define('APP_PATH', __DIR__ . '/../application/');
+define('ROOT_PATH', realpath(dirname(__DIR__)));
 
 // 定义入口为admin
 define('ENTRANCE', 'admin');

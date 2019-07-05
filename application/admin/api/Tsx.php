@@ -8,9 +8,9 @@
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace app\admin\controller;
+namespace app\admin\api;
 
-use app\common\generate\admin\controller\BaseTsx;
+use app\common\generate\api\controller\BaseTsx;
 
 class Tsx extends BaseTsx
 {

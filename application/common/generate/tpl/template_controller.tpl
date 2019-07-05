@@ -1,4 +1,3 @@
-<?php
 // +----------------------------------------------------------------------
 // | 代码生成器 php 生成的摸版文件这个摸版文件可以进行修改 如果此文件存在自动生成器将
 // | 不会生成该文件。
@@ -8,11 +7,14 @@
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace app\admin\controller;
+namespace {$namespace};
 
-use app\common\generate\admin\controller\BaseTsx;
+{volist name='use' id='item'}
+use {$item};
+{/volist}
 
-class Tsx extends BaseTsx
+class {$class_name} extends {$extends_class}
+
 {
 
 }

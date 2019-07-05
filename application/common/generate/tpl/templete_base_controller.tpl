@@ -14,6 +14,7 @@ use app\common\builder\ZBuilder;
 use app\admin\model\Attachment as AttachmentModel;
 use think\Image;
 use think\File;
+use think\App;
 {volist name='use' id='item'}
 use {$item};
 {/volist}
