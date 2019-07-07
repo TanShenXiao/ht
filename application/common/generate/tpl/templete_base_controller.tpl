@@ -14,9 +14,10 @@ use app\admin\model\Attachment as AttachmentModel;
 use think\Image;
 use think\File;
 use think\App;
-{volist name='use' id='item'}
-use {$item};
-{/volist}
+{foreach $use as $item }
+    use {$item};
+{/foreach}
+
 
 class {$class_name} extends {$extends_class}
 
@@ -38,8 +39,20 @@ class {$class_name} extends {$extends_class}
      */
     public function index()
     {
-        {$index_content}
+        $data_list = {$index_content['data_list']}->where($this->map)->order($order)->paginate();
+        // 分页数据
+        $page = $data_list->render();
 
+        $table = ZBuilder::make('table');
+            {foreach $index_content as $item }
+               {$item};
+            {/foreach}
+
+            ->setRowList($data_list) // 设置表格数据
+            ->setPages($page) // 设置分页数据
+        $table->fetch();
+
+        return $table;
     }
 
      /**
@@ -48,7 +61,7 @@ class {$class_name} extends {$extends_class}
      */
     public function add()
     {
-        {$add_content}
+
 
     }
 
@@ -58,7 +71,7 @@ class {$class_name} extends {$extends_class}
      */
     public function edit()
     {
-        {$edit_content}
+
 
     }
 
@@ -68,7 +81,7 @@ class {$class_name} extends {$extends_class}
      */
     public function delete()
     {
-        {$delete_content}
+
 
     }
 }

@@ -9,9 +9,11 @@
 
 namespace {$namespace};
 
-{volist name='use' id='item'}
-use {$item};
-{/volist}
+
+{foreach $use as $item }
+    use {$item};
+{/foreach}
+
 
 class {$class_name} extends {$extends_class}
 

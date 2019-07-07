@@ -32,6 +32,12 @@ class Generate
     protected $template_controller_file =  ROOT_PATH.'/application/common/generate/tpl/template_controller.tpl';
 
     /**
+     * 基礎验证器配置路径
+     * @var string
+     */
+    protected $template_base_validate_file =  ROOT_PATH.'/application/common/generate/tpl/template_base_validate.tpl';
+
+    /**
      * 验证器配置路径
      * @var string
      */
@@ -117,6 +123,7 @@ class Generate
         //数据填充
         if($this->is_existence($data,'templete_base_controller_file'))  $this->templete_base_controller_file = $data['templete_base_controller_file'];    //基础控制器摸版的路径
         if($this->is_existence($data,'template_controller_file'))       $this->template_controller_file      = $data['template_controller_file'];         //控制器摸版
+        if($this->is_existence($data,'template_base_validate_file'))    $this->template_base_validate_file   = $data['template_base_validate_file'];      //基礎验证器配置路径
         if($this->is_existence($data,'template_validate_file'))         $this->template_validate_file        = $data['template_validate_file'];           //验证器配置路径
         if($this->is_existence($data,'base_controller_path_admin'))     $this->base_controller_path_admin    = $data['base_controller_path_admin'];       //基础控制器后台存放路径
         if($this->is_existence($data,'base_controller_path_api'))       $this->base_controller_path_api      = $data['base_controller_path_api'];         //基础控制器api存放路径
@@ -144,6 +151,9 @@ class Generate
         }
         if(!is_file($this->template_controller_file)){
             $this->error_msg = '找不到控制器摸版文件';return;
+        }
+        if(!is_file($this->template_base_validate_file)){
+            $this->error_msg = '找不到基础校验器摸控制文件';return;
         }
         if(!is_file($this->template_validate_file)){
             $this->error_msg = '找不到校验器摸控制文件';return;
@@ -174,26 +184,53 @@ class Generate
         }
     }
 
-
     public function create()
     {
         //检测是否通过数据校验
         if($this->error_msg) return $this->error_msg;
-         $this->build_admin([]);  //生成后台
+        //定义模拟config文件
+        $config = [
+            'class_name' => 'Test',
+            'table' => ['test' => ['test'],'test2' => ['test2',['test.id = test2','inner']]],
+            'filed' =>[
+                [
+                    'filed' => 'id',
+                    'alias' => 'test',
+                    'name' => 'id',
+                    'is_search' => 1,
+                    'search_data' => ['text','','',[]],
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'is_from' => 1,
+                    'form_data' => ['','','','','','',''],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ],
+            ],
+        ];
+         $this->build_admin($config);  //生成后台
          $this->build_api([]);
 
-        //$config['']
-
-
-
-        //t($data);
-
-
-        echo 'aa';
+        echo 'ok';
     }
 
     protected function build_admin($config)
     {
+        //生成基础验证器
+        $base_validate = $this->diy_validate($config);
+        $this->created_file($this->template_base_validate_file,$this->base_validate_path_admin,$base_validate);
+
+        //生成验证器
+        $validate = [
+            'use' => [
+                $base_validate['namespace'].'\\'.$base_validate['class_name'],
+            ],
+            'class_name' => 'ValidateTsx',
+            'extends_class' => $base_validate['class_name'],
+            'change_date' => $this->date,
+        ];
+        $this->created_file($this->template_validate_file,$this->validate_path_admin,$validate);
+
         //生成基础后台控制器
         $base_admin = [
             'use' => [
@@ -207,11 +244,10 @@ class Generate
             'delete_content' => "echo 'name';",
             'change_date' => $this->date,
         ];
+        $this->diy_controller($config);
         $base_admin['namespace'] = $this->created_namespace($this->base_controller_path_admin);
+        $this->created_file($this->templete_base_controller_file,$this->base_controller_path_admin,$base_admin);
 
-        $content = $this->View->fetch($this->templete_base_controller_file,$base_admin);
-        $content = "<?php\n".$content;
-        file_put_contents($this->get_created_path($this->base_controller_path_admin,$base_admin['class_name']),$content);
         //生成前台控制器
         $admin = [
             'use' => [
@@ -222,13 +258,7 @@ class Generate
             'change_date' => $this->date,
 
         ];
-        $admin_path = $this->get_created_path($this->controller_path_admin,$admin['class_name']);
-        //if(!is_file($admin_path)){   //如果存在就不生成 如果不存在就生成
-            $admin['namespace'] = $this->created_namespace($this->controller_path_admin,$base_admin['class_name']);
-            $content = $this->View->fetch($this->template_controller_file,$admin);
-            $content = "<?php\n".$content;
-            file_put_contents($this->get_created_path($this->controller_path_admin,$admin['class_name']),$content);
-        //}
+        $this->created_file($this->template_controller_file,$this->controller_path_admin,$admin);
     }
 
     protected function build_api($config)
@@ -246,11 +276,8 @@ class Generate
             'delete_content' => "echo 'name';",
             'change_date' => $this->date,
         ];
-        $base_admin['namespace'] = $this->created_namespace($this->base_controller_path_api);
+        $this->created_file($this->templete_base_controller_file,$this->base_controller_path_api,$base_admin);
 
-        $content = $this->View->fetch($this->templete_base_controller_file,$base_admin);
-        $content = "<?php\n".$content;
-        file_put_contents($this->get_created_path($this->base_controller_path_api,$base_admin['class_name']),$content);
         //生成前台控制器
         $admin = [
             'use' => [
@@ -261,15 +288,160 @@ class Generate
             'change_date' => $this->date,
 
         ];
-        $admin_path = $this->get_created_path($this->controller_path_api,$admin['class_name']);
-        //if(!is_file($admin_path)){   //如果存在就不生成 如果不存在就生成
-        $admin['namespace'] = $this->created_namespace($this->controller_path_api,$base_admin['class_name']);
-        $content = $this->View->fetch($this->template_controller_file,$admin);
-        $content = "<?php\n".$content;
-        file_put_contents($this->get_created_path($this->controller_path_api,$admin['class_name']),$content);
-        //}
+        $this->created_file($this->template_controller_file,$this->controller_path_api,$admin);
     }
 
+    /**
+     * 验证数据组装
+     * @param $config
+     * @return array
+     */
+    protected function diy_validate($config)
+    {
+        $base_name = 'BaseValidate';
+        $base_validate = [      //基础数据
+            'use' => [
+                'think\Validate'
+            ],
+            'extends_class' => 'Validate',
+            'rule' => [],
+            'message' => [],
+            'scene' => [],
+            'change_date' => $this->date,
+        ];
+        $base_validate['class_name'] = $base_name.$config['class_name'];
+        foreach ($config['filed'] as $item){
+            if(!$item['is_validate']) continue;
+            if(!$item['validate_data']){
+                $item['validate_data'] = 'require';
+            }
+            $filed = $this->decompose($item['filed']);
+            $base_validate['rule'][$filed.'|'.$item['name']] = implode('|',$item['validate_data']);
+        }
+
+        return $base_validate;
+    }
+
+    /**
+     * 验证数据组装
+     * @param $config
+     * @return array
+     */
+    protected function diy_controller($config)
+    {
+        $base_name = 'Base';
+        $base_validate = [      //基础数据
+            'use' => [
+                'think\Validate'
+            ],
+            'extends_class' => 'Validate',
+            'rule' => [],
+            'message' => [],
+            'scene' => [],
+            'change_date' => $this->date,
+        ];
+        //生成基础后台控制器
+        $base_admin = [
+            'use' => [
+                'think\Controller'
+            ],
+            'extends_class' => 'Admin',
+            'index_content' => [
+                'data_list' => '',
+            ],
+            'add_content' => [],
+            'edit_content' => [],
+            'delete_content' => [],
+            'change_date' => $this->date,
+        ];
+        $base_admin['class_name'] = $base_name.$config['class_name'];
+        //查询头封装
+        $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);
+        $filed = $this->analysis_field($config['filed'],'is_list');
+        $base_admin['index_content']['data_list'] .= "->filed('{$filed}')";
+        //构造器封装
+
+        foreach ($config['filed'] as $item){
+            if(!$item['is_list']) continue;
+
+            $filed = $this->decompose($item['filed']);
+            $base_validate['rule'][$filed.'|'.$item['name']] = implode('|',$item['validate_data']);
+        }
+
+        return $base_validate;
+    }
+
+    /**
+     * table头部封装
+     * @param $table
+     * @return string
+     */
+    public function analysis_table($table)
+    {
+        $str = "Db::name('";
+        $i = 0;
+        foreach($table as $key => $value){
+            $i++;
+            if($i == 1){
+                if(empty($value)){
+                    $value = $key;
+                }
+                if(is_array($value)){
+                    $value = $value[0];
+                }
+                $str .= $key." {$value}')";
+                continue;
+            }
+
+            $str .="->join({$key} {$value[0]},'{$value[1][0]}','{$value[1][1]}')";
+        }
+
+        return $str;
+    }
+
+    /**
+     * 字段封装
+     * @param $table
+     * @return string
+     */
+    public function analysis_field($filed,$is_show)
+    {
+        $str = "";
+        foreach($filed as $key => $value){
+            if(!isset($value[$is_show]) or !$value[$is_show]){
+                continue;
+            }
+            $str = "{$value['alias']}.{$value['filed']} as {$value['alias']}_{$value['filed']},";
+        }
+
+        $str = trim($str,',');
+
+        return $str;
+    }
+
+    /**
+     * 字段封装
+     * @param $table
+     * @return string
+     */
+    public function analysis_column($filed,$is_show = 'is_list')
+    {
+        $column = [];
+        foreach($filed as $key => $value){
+            if(!isset($value[$is_show]) or !$value[$is_show]){
+                continue;
+            }
+            switch($value['']):
+            //$column = ["{$value['alias']}_{$value['filed']}",$value['name']];
+
+
+            endswitch;
+        }
+
+
+
+        return $column;
+    }
 
     /**
      * 获取路径对应的命名空间
@@ -297,8 +469,34 @@ class Generate
        return preg_replace('/(\/|\\\)$/i','',$path).'/'.$prefix.$class_name.'.php';
     }
 
+    /**
+     * 生成目标文件
+     * @param $file
+     * @param $target
+     * @param array $var
+     * @return bool|int
+     * @throws \Exception
+     */
+    protected function created_file($file,$target,&$var = [])
+    {
+        if(!isset($var['namespace'])){
+            $var['namespace'] = $this->created_namespace($target);
+        }
+        $content = $this->View->fetch($file,$var);
+        $content = "<?php\n".$content;
+        return file_put_contents($this->get_created_path($target,$var['class_name']),$content);
+    }
 
-
+    /**
+     * 分解数组取
+     * @param $filed
+     * @return array
+     */
+    public function decompose($filed)
+    {
+        $array = explode('.',$filed);
+        return array_pop($array);
+    }
 
     /**
      * 数据简单校验
