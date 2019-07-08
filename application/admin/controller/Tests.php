@@ -10,9 +10,11 @@
 
 namespace app\admin\controller;
 
-use app\common\generate\admin\controller\BaseTsx;
 
-class Tsx extends BaseTsx
+use app\common\generate\admin\controller\BaseTests;
+
+
+class Tests extends BaseTests
 {
 
 }

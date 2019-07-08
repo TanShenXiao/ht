@@ -1,12 +1,12 @@
+<?php
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: {$change_date}
-// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-08 18:29:16// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace {$namespace};
+namespace app\common\generate\admin\controller;
 
 use think\Db;
 use app\common\builder\ZBuilder;
@@ -14,13 +14,10 @@ use app\admin\model\Attachment as AttachmentModel;
 use think\Image;
 use think\File;
 use think\App;
-{foreach $use as $item }
-use {$item};
-{/foreach}
+use app\admin\controller\Admin;
 
 
-class {$class_name} extends {$extends_class}
-
+class BaseTests extends Admin
 {
 
      /**
@@ -32,12 +29,9 @@ class {$class_name} extends {$extends_class}
          parent::__construct($app);
 
         //共用变量
-        {foreach $public_variable as $key => $item }
-
-        $this->{php}echo $key.' = '.$item;{/php}
-
-        {/foreach}
-
+        
+        $this->test_name = Db::name('test2')->column('name','id');
+        
         //共用变量结束
 
     }
@@ -52,28 +46,31 @@ class {$class_name} extends {$extends_class}
         $map = $this->getMap();
         $order = $this->getOrder();
 
-        $data_list = {php}echo $index_content['data_list'];{/php}->where($map)->order($order)->paginate();
+        $data_list = Db::name('test test')->join('test2 test2','test.id = test2.pid','inner')->field('test.id as id,test.id as test_id,test.name as test_name,test2.name as test2_name')->where($map)->order($order)->paginate();
         // 分页数据
         $page = $data_list->render();
 
         $table = ZBuilder::make('table')
         //搜索字段
         ->setSearchArea([
-        {foreach $index_content['search'] as $item }
-
-            {php}echo $item;{/php}
-        {/foreach}
-
+        
+            ['text','test.id','id','like','',''],        
+            ['select','test.name','用户姓名1','','',$this->test_name],        
+            ['text','test2.name','用户姓名2','like','',''],        
         ])
 
         //搜索字段结束
 
         //显示字段
-        {foreach $index_content['column'] as $item }
-
-            {php}echo $item;{/php}
-        {/foreach}
-
+        
+            ->addColumn('test_id','id','text','')        
+            ->addColumn('test_name','用户姓名1','text','')        
+            ->addColumn('test2_name','用户姓名2','text','')        
+            ->addColumn('right_button', '操作', 'btn')        
+            ->addTopButton('add')       //顶部添加按钮        
+            ->addTopButton('delete')    //顶部删除按钮        
+            ->addRightButton('edit')     //右边编辑按钮        
+            ->addRightButton('delete')   //右边删除按钮        
         //显示字段结束
 
             ->setRowList($data_list) // 设置表格数据

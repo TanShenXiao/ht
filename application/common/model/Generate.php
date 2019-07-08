@@ -11,6 +11,7 @@
 
 namespace app\common\model;
 
+use think\Db;
 use think\View;
 
 /**
@@ -116,7 +117,7 @@ class Generate
      */
     protected $date = '';
 
-
+    protected $public_variable = [];
 
     public function __construct($data = [])
     {
@@ -188,28 +189,10 @@ class Generate
     {
         //检测是否通过数据校验
         if($this->error_msg) return $this->error_msg;
-        //定义模拟config文件
-        $config = [
-            'class_name' => 'Test',
-            'table' => ['test' => ['test'],'test2' => ['test2',['test.id = test2','inner']]],
-            'filed' =>[
-                [
-                    'filed' => 'id',
-                    'alias' => 'test',
-                    'name' => 'id',
-                    'is_search' => 1,
-                    'search_data' => ['text','','',[]],
-                    'is_list' => 1,
-                    'list_data' => ['text',''],
-                    'is_from' => 1,
-                    'form_data' => ['','','','','','',''],
-                    'is_validate' => 1,
-                    'validate_data' => ['require'],
-                ],
-            ],
-        ];
+
+         $config = $this->config;
          $this->build_admin($config);  //生成后台
-         $this->build_api([]);
+         //$this->build_api([]);
 
         echo 'ok';
     }
@@ -232,33 +215,23 @@ class Generate
         $this->created_file($this->template_validate_file,$this->validate_path_admin,$validate);
 
         //生成基础后台控制器
-        $base_admin = [
-            'use' => [
-                'think\Controller'
-            ],
-            'class_name' => 'BaseTsx',
-            'extends_class' => 'Controller',
-            'index_content' => "echo 'name';",
-            'add_content' => "echo 'name';",
-            'edit_content' => "echo 'name';",
-            'delete_content' => "echo 'name';",
-            'change_date' => $this->date,
-        ];
-        $this->diy_controller($config);
+        $base_admin = $this->diy_controller($config);
         $base_admin['namespace'] = $this->created_namespace($this->base_controller_path_admin);
         $this->created_file($this->templete_base_controller_file,$this->base_controller_path_admin,$base_admin);
-
         //生成前台控制器
         $admin = [
             'use' => [
                  $base_admin['namespace'].'\\'.$base_admin['class_name'],
             ],
-            'class_name' => 'Tsx',
+            'class_name' => $config['class_name'],
             'extends_class' => $base_admin['class_name'],
             'change_date' => $this->date,
 
         ];
         $this->created_file($this->template_controller_file,$this->controller_path_admin,$admin);
+
+        //自动创建菜单
+        $this->created_menu($config['class_name']);
     }
 
     protected function build_api($config)
@@ -310,13 +283,13 @@ class Generate
             'change_date' => $this->date,
         ];
         $base_validate['class_name'] = $base_name.$config['class_name'];
-        foreach ($config['filed'] as $item){
+        foreach ($config['field'] as $item){
             if(!$item['is_validate']) continue;
             if(!$item['validate_data']){
                 $item['validate_data'] = 'require';
             }
-            $filed = $this->decompose($item['filed']);
-            $base_validate['rule'][$filed.'|'.$item['name']] = implode('|',$item['validate_data']);
+            $field = $this->decompose($item['field']);
+            $base_validate['rule'][ "{$item['alias']}_{$field}".'|'.$item['name']] = implode('|',$item['validate_data']);
         }
 
         return $base_validate;
@@ -343,7 +316,7 @@ class Generate
         //生成基础后台控制器
         $base_admin = [
             'use' => [
-                'think\Controller'
+                'app\admin\controller\Admin'
             ],
             'extends_class' => 'Admin',
             'index_content' => [
@@ -356,19 +329,15 @@ class Generate
         ];
         $base_admin['class_name'] = $base_name.$config['class_name'];
         //查询头封装
-        $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);
-        $filed = $this->analysis_field($config['filed'],'is_list');
-        $base_admin['index_content']['data_list'] .= "->filed('{$filed}')";
-        //构造器封装
+        $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);   //列表查询封装
+        $field = $this->analysis_field($config['field'],'is_list');                            //字段查询封装
+        $base_admin['index_content']['data_list'] .= "->field('{$field}')";
+        $base_admin['index_content']['search'] = $this->analysis_search($config['field']);      //搜索字段封装
+        $base_admin['index_content']['column'] = $this->analysis_column($config['field']);     //显示列表字段封装
 
-        foreach ($config['filed'] as $item){
-            if(!$item['is_list']) continue;
+        $base_admin['public_variable'] = $this->public_variable;  //加载共用变量
 
-            $filed = $this->decompose($item['filed']);
-            $base_validate['rule'][$filed.'|'.$item['name']] = implode('|',$item['validate_data']);
-        }
-
-        return $base_validate;
+        return $base_admin;
     }
 
     /**
@@ -386,14 +355,11 @@ class Generate
                 if(empty($value)){
                     $value = $key;
                 }
-                if(is_array($value)){
-                    $value = $value[0];
-                }
                 $str .= $key." {$value}')";
                 continue;
             }
 
-            $str .="->join({$key} {$value[0]},'{$value[1][0]}','{$value[1][1]}')";
+            $str .="->join('{$key} {$value[0]}','{$value[1][0]}','{$value[1][1]}')";
         }
 
         return $str;
@@ -404,14 +370,18 @@ class Generate
      * @param $table
      * @return string
      */
-    public function analysis_field($filed,$is_show)
+    public function analysis_field($field,$is_show)
     {
-        $str = "";
-        foreach($filed as $key => $value){
+        $table_keys = array_keys($this->config['table']);
+        $main_alisa =$this->config['table'][$table_keys[0]];
+        $str = "{$main_alisa}.id as id,";  //将主表的id添加到字段中
+
+        foreach($field as $key => $value){
             if(!isset($value[$is_show]) or !$value[$is_show]){
                 continue;
             }
-            $str = "{$value['alias']}.{$value['filed']} as {$value['alias']}_{$value['filed']},";
+            $value['field'] = $this->decompose($value['field']);
+            $str .= "{$value['alias']}.{$value['field']} as {$value['alias']}_{$value['field']},";
         }
 
         $str = trim($str,',');
@@ -420,27 +390,93 @@ class Generate
     }
 
     /**
+     * 字段搜索封装
+     * @param $table
+     * @return string
+     */
+    public function analysis_search($field,$is_show = 'is_search')
+    {
+        $search = [];
+        foreach($field as $key => $value){
+            if(!isset($value[$is_show]) or !$value[$is_show]){
+                continue;
+            }
+            $value['field'] = $this->decompose($value['field']);
+            $field = $value['alias'].'_'.$value['field'];
+
+            //数组对象不能直接传参对数据经行转换
+            if(is_array($value['search_data'][3]) and !empty($value['search_data'][3])){
+                if(!isset($this->public_variable[$field]) or $this->public_variable[$field]){
+                    $this->public_variable[$field] = $this->array_to_string($value['search_data'][3]).';';
+                }
+                $value['search_data'][3] = '$this->'.$field;
+
+            } elseif(empty($value['search_data'][3])){
+                $value['search_data'][3] = "''";
+            }elseif ($this->Relation_filed($value['search_data'][3])){
+                if(!isset($this->public_variable[$field]) or $this->public_variable[$field]){
+                    $this->public_variable[$field] = $this->Relation_filed($value['search_data'][3]).';';
+                }
+                $value['search_data'][3] = '$this->'.$field;
+            } else{
+                $value['search_data'][3] = "'{$value['search_data'][3]}'";
+            }
+
+            $search[] = "['{$value['search_data'][0]}','{$value['table']}.{$value['field']}','{$value['name']}','{$value['search_data'][1]}','{$value['search_data'][2]}',{$value['search_data'][3]}],";
+        }
+
+        return $search;
+    }
+
+    /**
      * 字段封装
      * @param $table
      * @return string
      */
-    public function analysis_column($filed,$is_show = 'is_list')
+    public function analysis_column($field,$is_show = 'is_list')
     {
         $column = [];
-        foreach($filed as $key => $value){
+        foreach($field as $key => $value){
             if(!isset($value[$is_show]) or !$value[$is_show]){
                 continue;
             }
-            switch($value['']):
-            //$column = ["{$value['alias']}_{$value['filed']}",$value['name']];
 
-
-            endswitch;
+            $value['field'] = $this->decompose($value['field']);
+            $data = array_merge(["{$value['alias']}_{$value['field']}",$value['name']],$value['list_data']);
+            $str = $this->preg_Separate(implode(',',$data));
+            $column[] = "->addColumn({$str})";
         }
 
+        if($this->config['is_edit'] or $this->config['is_delete']){
 
+            $column[] = "->addColumn('right_button', '操作', 'btn')";
+
+        }
+        //判断是否需要 添加 编辑 删除按钮
+        if($this->config['is_add']){
+             $column[] = "->addTopButton('add')       //顶部添加按钮";
+             $column[] = "->addTopButton('delete')    //顶部删除按钮";
+        }
+        if($this->config['is_edit']){
+            $column[] = "->addRightButton('edit')     //右边编辑按钮";
+        }
+        if($this->config['is_delete']){
+            $column[] = "->addRightButton('delete')   //右边删除按钮";
+        }
 
         return $column;
+    }
+
+    /**
+     *为分解的参数加单引号
+     * @param $str
+     * @return mixed
+     */
+    public function preg_Separate($str)
+    {
+        $str = preg_replace('/,/i',"','",$str);
+        $str = "'".$str."'";
+        return $str;
     }
 
     /**
@@ -489,24 +525,171 @@ class Generate
 
     /**
      * 分解数组取
-     * @param $filed
+     * @param $field
      * @return array
      */
-    public function decompose($filed)
+    public function decompose($field)
     {
-        $array = explode('.',$filed);
+        $array = explode('.',$field);
         return array_pop($array);
     }
 
     /**
      * 数据简单校验
      * @param $data
-     * @param string $filed
+     * @param string $field
      * @return bool
      */
-    public function is_existence($data,$filed = '')
+    public function is_existence($data,$field = '')
     {
-        return isset($data[$filed]) and $data[$filed];
+        return isset($data[$field]) and $data[$field];
+
+    }
+
+    /**
+     * 把数组变成数组字符串
+     * @param $array
+     * @return string
+     */
+    public function array_to_string($array)
+    {
+        $str = '';
+        $i =0;
+        if(!is_array($array)) return '';
+        foreach ($array as $key => $value){
+            $i++;
+            if($i == 1){
+                $str .="[";
+            }
+            if(is_array($value)){
+                $val = $this->array_to_string($value);
+                if(!preg_match('/^\[.*\]$/i',$val)){
+                    $val = "'".$val."'";
+                }
+            }else{
+                if(is_null($value)){
+                    $val = "null";
+                }elseif (is_bool($value)){
+                    if($value){
+                        $val = "true";
+                    }else{
+                        $val = "false";
+                    }
+                }else{
+                    $val = "'".$value."'";
+                }
+            }
+            $str .= "'{$key}' => {$val},";
+        }
+        if($i > 0){
+            $str  = trim($str,',');
+            $str .=']';
+        }
+
+        return $str;
+    }
+
+    /**
+     * 获取多选的关联 查询
+     * @param $str
+     * @return bool|string
+     */
+    public function Relation_filed($str)
+    {
+        $data = explode('->',$str);
+        if(!isset($data[1]) or !isset($data[2]) or !$data[0] or !$data[1] or !$data[2]){
+            return false;
+        }
+
+        return "Db::name('{$data[0]}')->column('{$data[1]}','{$data[2]}')";
+    }
+
+
+    /**
+     * 创建后台菜单
+     */
+    protected function created_menu($controller_name = '')
+    {
+        $module = $this->config['module'];
+        $base_url = $this->config['module'].'/'.$controller_name.'/';
+        $index_url = $base_url.'index';
+        $add_url = $base_url.'add';
+        $edit_url = $base_url.'edit';
+        $delete_url = $base_url.'delete';
+
+        $index = Db::name('admin_menu')->where(['module' => $module,'url_value' => $index_url])->find();
+        $add = Db::name('admin_menu')->where(['module' => $module,'url_value' => $add_url])->find();
+        $edit = Db::name('admin_menu')->where(['module' => $module,'url_value' => $edit_url])->find();
+        $delete = Db::name('admin_menu')->where(['module' => $module,'url_value' => $delete_url])->find();
+
+
+
+        $pid = Db::name('admin_menu')->where(['module' => $module,'pid' => 0])->value('id');
+        $pid = $pid ? $pid:1;
+        if(!$index and !$add and !$edit and !$delete){   //创建顶级空菜单
+            $data = [];
+            $data['pid'] = $pid;
+            $data['module'] = $module;
+            $data['title'] = $this->config['title'];
+            $data['icon'] = 'fa fa-fw fa-bars';
+            $data['url_type'] = 'module_admin';
+            $data['url_value'] = '';
+
+            Db::name('admin_menu')->insert($data);
+            $pid = Db::getLastInsID();
+
+        }else{
+           $pid_data =  $index ? $index:($add?$add:($edit?$edit:($delete?$delete:'')));  //找出存在上级的那个上级id
+           $pid = $pid_data['pid'];
+        }
+
+        if(!$index){   //查看
+            $data = [];
+            $data['pid'] = $pid;
+            $data['module'] = $module;
+            $data['title'] = '查看';
+            $data['icon'] = 'fa fa-fw fa-bars';
+            $data['url_type'] = 'module_admin';
+            $data['url_value'] = $index_url;
+
+            Db::name('admin_menu')->insert($data);
+        }
+
+        if(!$add){   //添加
+            $data = [];
+            $data['pid'] = $pid;
+            $data['module'] = $module;
+            $data['title'] = '添加';
+            $data['icon'] = 'fa fa-fw fa-bars';
+            $data['url_type'] = 'module_admin';
+            $data['url_value'] = $add_url;
+
+            Db::name('admin_menu')->insert($data);
+        }
+
+        if(!$edit){   //编辑
+            $data = [];
+            $data['pid'] = $pid;
+            $data['module'] = $module;
+            $data['title'] = '编辑';
+            $data['icon'] = 'fa fa-fw fa-bars';
+            $data['url_type'] = 'module_admin';
+            $data['url_value'] = $edit_url;
+
+            Db::name('admin_menu')->insert($data);
+        }
+
+        if(!$delete){   //删除
+            $data = [];
+            $data['pid'] = $pid;
+            $data['module'] = $module;
+            $data['title'] = '删除';
+            $data['icon'] = 'fa fa-fw fa-bars';
+            $data['url_type'] = 'module_admin';
+            $data['url_value'] = $delete_url;
+
+            Db::name('admin_menu')->insert($data);
+        }
     }
 
 }

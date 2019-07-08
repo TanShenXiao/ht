@@ -2,16 +2,16 @@
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础消校验器摸版文件 注意该文件不可以修改，他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-07 12:46:20
+// | 最新更新时间: 2019-07-08 18:29:16
 // +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
 namespace app\admin\validate\admin;
 
-use app\common\generate\admin\validate\BaseValidateTest;
+use app\common\generate\admin\validate\BaseValidateTests;
 
-class ValidateTsx extends BaseValidateTest
+class ValidateTsx extends BaseValidateTests
 {
 
 }

@@ -11,7 +11,7 @@ namespace {$namespace};
 
 
 {foreach $use as $item }
-    use {$item};
+use {$item};
 {/foreach}
 
 
