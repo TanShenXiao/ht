@@ -168,7 +168,7 @@ class BaseTests extends Admin
         ->addDatetime('test_created_time','表1','时间','','','')
         ->addText('test2_name','表2','提示信息','','','','')
         ->addText('test3_name','表3','提示信息','','','','');
-        
+
         $from->setFormData($data);
 
         if($this->request->isPost()){

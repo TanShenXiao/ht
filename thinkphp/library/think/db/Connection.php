@@ -359,6 +359,12 @@ abstract class Connection
             return [];
         }
 
+        //tanshenxiao加 如果匹配不到表前缀就把表前缀加起
+        $prefix = $this->getConfig('prefix');
+        if($prefix and !preg_match("/^{$prefix}/i",$tableName)){
+            $tableName = $prefix.$tableName;
+        }
+
         list($tableName) = explode(' ', $tableName);
 
         if (false === strpos($tableName, '.')) {
