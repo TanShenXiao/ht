@@ -363,7 +363,7 @@ abstract class Connection
         $prefix = $this->getConfig('prefix');
         $database = $this->getConfig('database');
         if($prefix and !preg_match("/^{$prefix}/i",$tableName)){
-            $is_table = $this->query("select COUNT(TABLE_SCHEMA) AS num FROM information_schema.TABLES WHERE TABLE_SCHEMA='{$database}' AND TABLE_NAME = '{$tableName}'");
+            $is_table = $this->query("SELECT COUNT(TABLE_SCHEMA) AS num FROM information_schema.TABLES WHERE TABLE_SCHEMA='{$database}' AND TABLE_NAME = '{$tableName}'");
             if($is_table[0]['num'] == 0){
                 $tableName = $prefix.$tableName;
             }
