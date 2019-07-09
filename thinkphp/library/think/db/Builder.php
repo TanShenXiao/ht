@@ -695,11 +695,9 @@ abstract class Builder
     protected function parseDateTime(Query $query, $value, $key, $bindType = null)
     {
         $options = $query->getOptions();
-
         // 获取时间字段类型
         if (strpos($key, '.')) {
             list($table, $key) = explode('.', $key);
-
             if (isset($options['alias']) && $pos = array_search($table, $options['alias'])) {
                 $table = $pos;
             }

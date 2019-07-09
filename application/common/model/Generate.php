@@ -117,6 +117,10 @@ class Generate
      */
     protected $date = '';
 
+    protected $tables = [];
+
+    protected $master_tables = [];
+
     /**
      * 获取字段属性和字段应有的值
      * @var array
@@ -154,7 +158,7 @@ class Generate
         'addText'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['group','标签分组',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //单行文本框
         'addTextarea'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //多行文本框
         'addUeditor'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //百度编辑器
-        'addCkeditor'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['width','宽度',1],['height','高度',1],['extra_class','额外css类',1]],  //CKEditor编辑器
+        'addCkeditor'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['width','宽度',1],['height','高度',1],['extra_class','额外css类',1]],  //CKEditor编辑器
         'addWangeditor' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //wang编辑器
         'addEditormd'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['watch','实时预览',3],['extra_class','额外css类',1]],  //markdown编辑器
         'addSummernote' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['width','宽度',1],['height','高度',1],['extra_class','额外css类',1]],  //summernote编辑器
@@ -164,6 +168,10 @@ class Generate
         'addSelectAjax' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['params','参数',2],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //下拉菜单Ajax
     ];
 
+    /**
+     * 摸版共用参数
+     * @var array
+     */
     protected $public_variable = [];
 
     public function __construct($data = [])
@@ -184,6 +192,9 @@ class Generate
         $this->View = (new View())->engine();
 
         $this->date = date('Y-m-d H:i:s');
+
+        $this->tables = $this->get_table();
+        $this->master_tables = $this->get_table(true);
 
         //数据校验
         $this->validate();
@@ -255,10 +266,13 @@ class Generate
             'use' => [
                 $base_validate['namespace'].'\\'.$base_validate['class_name'],
             ],
-            'class_name' => 'ValidateTsx',
             'extends_class' => $base_validate['class_name'],
             'change_date' => $this->date,
         ];
+
+        $this->config['validate_name'] = $validate['class_name']  = 'Validate'.$config['class_name'];                                        //在配置文件中保存验证类名
+        $this->config['validate_namespace'] = $this->created_namespace($this->validate_path_admin).'\\'.$this->config['validate_name'];     //在配置文件中保存验证类的命名空间
+
         $this->created_file($this->template_validate_file,$this->validate_path_admin,$validate);
 
         //生成基础后台控制器
@@ -361,21 +375,24 @@ class Generate
             'change_date' => $this->date,
         ];
         //生成基础后台控制器
+        $validate_namespace = $this->config['validate_namespace'];
         $base_admin = [
             'use' => [
-                'app\admin\controller\Admin'
+                'app\admin\controller\Admin',
+                $validate_namespace,
             ],
             'extends_class' => 'Admin',
             'index_content' => [
                 'data_list' => '',
             ],
-            'add_content' => [],
             'edit_content' => [],
             'delete_content' => [],
             'change_date' => $this->date,
         ];
         $base_admin['class_name'] = $base_name.$config['class_name'];
-        $base_admin['master_table'] = $this->get_master_table();               //获取主表信息用于条件查询
+        $this->public_variable['tables'] = $this->array_to_string($this->tables).'; //数据表信息';           //获取主表信息用于条件查询
+        $base_admin['master_table'] = $this->master_tables;                  //获取主表信息
+
         //index 所需数据封装
         $base_admin['index_content']['title'] = $config['title'].'_查看';
         $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);   //列表查询封装
@@ -383,14 +400,24 @@ class Generate
         $base_admin['index_content']['data_list'] .= "->field('{$field}')";
         $base_admin['index_content']['search'] = $this->analysis_search($config['field']);      //搜索字段封装
         $base_admin['index_content']['column'] = $this->analysis_column($config['field']);     //显示列表字段封装
+
         //add 所需数据封装
         $base_admin['add_content']['title'] = $config['title'].'_添加';
-        $base_admin['add_content']['data_list'] = $this->analysis_table($config['table']);    //列表查询封装
-        $field = $this->analysis_field($config['field'],'is_add');                            //字段查询封装
-        $base_admin['add_content']['data_list'] .= "->field('{$field}')";
+        $base_admin['add_content']['column'] = $this->analysis_form_column($config['field'],'is_from'); //编辑字段
+        $base_admin['add_content']['column_num'] = count($base_admin['add_content']['column'])-1;
+        $base_admin['add_content']['validate_class'] = $this->config['validate_name'];
+        $base_admin['add_content']['relationship'] = $this->Relationship();
 
+        //edit 所需数据封装
+        $base_admin['edit_content']['title'] = $config['title'].'_编辑';
+        $base_admin['edit_content']['data_list'] = $this->analysis_table($config['table']);    //列表查询封装
+        $field = $this->analysis_field($config['field'],'is_from',true);                             //字段查询封装
+        $base_admin['edit_content']['data_list'] .= "->field('{$field}')";
+        $base_admin['edit_content']['column'] = $this->analysis_form_column($config['field'],'is_from',true); //编辑字段
+        $base_admin['edit_content']['column_num'] = count($base_admin['edit_content']['column'])-1;
+        $base_admin['edit_content']['validate_class'] = $this->config['validate_name'];
 
-
+        $this->Relationship();
 
 
         $base_admin['public_variable'] = $this->public_variable;  //加载共用变量
@@ -424,14 +451,25 @@ class Generate
     }
 
     /**
-     * 字段封装
-     * @param $table
+     * @param $field
+     * @param $is_show
+     * @param bool $is_show_primary_key  是否查询每张表的主键
      * @return string
      */
-    public function analysis_field($field,$is_show)
+    public function analysis_field($field,$is_show,$is_show_primary_key = false)
     {
-        $main_alisa = $this->get_master_table()[1];
+        $main_alisa = $this->master_tables[0];
         $str = "{$main_alisa}.id as id,";  //将主表的id添加到字段中
+
+        //添加除主表以外的其他主键
+        if($is_show_primary_key){
+            $tables = $this->tables;
+            if(!empty($tables)){
+                foreach ($tables as $key => $item){
+                    $str .=$key.'.'.$item['pk'].' as '.$key.'_'.$item['pk'].',';
+                }
+            }
+        }
 
         foreach($field as $key => $value){
             if(!isset($value[$is_show]) or !$value[$is_show]){
@@ -524,21 +562,68 @@ class Generate
         return $column;
     }
 
-    public function analysis_form_column($field,$is_show = 'is_add')
+    /**
+     * 组装表单数据
+     * @param $field
+     * @param string $is_show
+     * @param bool $is_primary_key 是否将其他表主键隐藏在表单中
+     * @return array
+     */
+    public function analysis_form_column($field,$is_show = 'is_add',$is_primary_key = false)
     {
         $column = [];
+
+        //添加除主表以外的其他主键 隐藏表单用于数据修改
+        if($is_primary_key){
+            $tables = $this->tables;
+            if(!empty($tables)){
+                foreach ($tables as $key => $item){
+                    $column[] = "->addHidden('{$key}_{$item['pk']}','')";
+                }
+            }
+        }
+
         foreach($field as $key => $value){
             if(!isset($value[$is_show]) or !$value[$is_show]){
                 continue;
             }
 
             $value['field'] = $this->decompose($value['field']);
+            $data = $value['form_data'];
+            if(!key_exists('add'.$data['type'],$this->filed_data)){  //如果获取不到默认取单行文本框
+                $data['type'] = 'Text';
+            }
+            if(!isset($data['title'])){
+                $data['title'] = $value['name'];
+            }
+            if(!isset($data['name'])){
+                $data['name'] = $value['alias'].'_'.$value['field'];
+            }
 
+            $filed_data = $this->filed_data['add'.$data['type']];
+            $i = 0;
+            $str = '->';
+            foreach ($filed_data as $key => $item){
+                $i++;
+                if($i == 1){
+                    $str .='add'.$data['type']."(";
+                }
+                if(!isset($data[$item[0]])){
+                    if($item[2] == 1){
+                        $data[$item[0]] = '';
+                    }elseif ($item[2] == 2){
+                        $data[$item[0]] = [];
+                    }else{
+                        $data[$item[0]] = '';
+                    }
+                }
+                $str .="'".$data[$item[0]]."',";
+            }
 
-            $data = array_merge(["{$value['alias']}_{$value['field']}",$value['name']],$value['list_data']);
-            $str = $this->preg_Separate(implode(',',$data));
-            $column[] = "->addColumn({$str})";
+            $column[] = trim($str,',').')';
         }
+
+        return $column;
     }
 
     /**
@@ -621,13 +706,35 @@ class Generate
     }
 
     /**
-     * 获取主表信息 第一个是表名 第二个是表别名
+     * 获取表信息 第一个是别名 第二个是表名
+     * is_master 是否获取主表 true是 false不是
      * @return array
      */
-    protected function get_master_table()
+    protected function get_table($is_master = false)
     {
-        $table_keys = array_keys($this->config['table']);
-        $table = [$table_keys[0],$this->config['table'][$table_keys[0]]];
+        $table = [];
+        foreach ($this->config['table'] as $key => $item){
+            if(is_array($item)){
+                $alias = $item[0];
+            }elseif(!$item){
+                $alias = $key;
+            }else{
+                $alias = $item;
+            }
+
+            $pk = Db::name("{$key}")->getPk();  //获取表的主键
+            if(!$pk){
+                $pk = 'id'; //当主键不存在的时候用id作为主键
+            }elseif (is_array($pk)){
+                $pk = $pk[0];
+            }
+
+            if($is_master){
+                return [$alias,['table' => $key,'pk' => $pk]];
+            }
+
+            $table[$alias] = ['table' => $key,'pk' => $pk];
+        }
 
         return $table;
     }
@@ -689,6 +796,41 @@ class Generate
 
         return "Db::name('{$data[0]}')->column('{$data[1]}','{$data[2]}')";
     }
+
+    /**
+     * 构建关系表之间的字段关系
+     * @return array
+     */
+    public function Relationship()
+    {
+        $add_Relationship = [];
+        //条件分析
+        $tables = $this->config['table'];
+         array_shift($tables);
+        foreach ($tables as $key => $item)
+        {
+            if(!isset($item[1][0])) continue;
+            //关系分析
+            //$gx = explode('and',$)
+            $on = preg_replace('/(or|and){1}.*$/i','',$item[1][0]);
+            $on = explode('=',$on);
+            if(!isset($on['0']) or !isset($on[1])){
+                continue;
+            }
+            $on[0] = explode('.',trim($on[0]));
+            $on[1] = explode('.',trim($on[1]));
+            //查看他们之间的关系那个是主键
+            foreach ($on as $key => $item){
+                $pkey = $key == 1? 0:1;
+                if($this->tables[$item[0]]['pk'] == $item[1]) continue;
+                $add_Relationship[] = "Db::name('{$this->tables[$item[0]]['table']}')->where(['{$this->tables[$item[0]]['pk']}' => \${$item[0]}_last_id])->update(['{$item[1]}' => \${$on[$pkey][0]}_last_id])";
+                break;
+            }
+        }
+
+        return $add_Relationship;
+    }
+
 
 
     /**

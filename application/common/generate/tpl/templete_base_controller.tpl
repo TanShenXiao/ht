@@ -76,8 +76,8 @@ class {$class_name} extends {$extends_class}
 
         //显示字段结束
 
-            ->setRowList($data_list) // 设置表格数据
-            ->setPages($page); // 设置分页数据
+        ->setRowList($data_list) // 设置表格数据
+        ->setPages($page); // 设置分页数据
 
         return $table->fetch();
     }
@@ -88,12 +88,67 @@ class {$class_name} extends {$extends_class}
      */
     public function add()
     {
-        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}');
+        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
 
+        //显示字段
+        {foreach $add_content['column'] as $key => $item }
+        {php}
+           if($add_content['column_num'] <= $key){
 
+            echo $item.";\r\n";
+
+            }else{
+
+            echo $item."\r\n";
+
+            }
+        {/php}
+        {/foreach}
 
         if($this->request->isPost()){
+            $change_data = input();
+            $validate = new {$add_content['validate_class']}();
+            if(!$validate->check($change_data)){
+                $this->error($validate->getError());
+            }
 
+            //数据分解
+            $insert_data = [];
+            foreach ($change_data as $key => $item){
+                $arr = explode('_',$key,2);
+                if(!isset($arr[1])) continue;
+                if(key_exists($arr[0],$this->tables)){
+                    $table = $this->tables[$arr[0]];
+                    $insert_data[$table['table']]['data'][$arr[1]] = $item;
+                    $insert_data[$table['table']]['alias']= $arr[0];
+                }
+            }
+            //开启事务插入数据
+            Db::startTrans();
+            foreach ($insert_data as $key => $item){
+                if(empty($item['data'])) continue;
+                if(!Db::name($key)->insert($item['data'])){
+                    $this->error("表".$key."添加数失败。");
+                }
+
+                $last_id_name = $item['alias'].'_last_id';  //存储插入id
+                $$last_id_name = Db::getLastInsID();
+            }
+
+            //循环更新字段之间的关系
+            {foreach $add_content['relationship'] as $key => $item }
+
+            if(!{php}echo $item;{/php}){
+                $this->error("数据关系更新失败");
+            }
+            {/foreach}
+
+            //更新字段关系结束
+
+
+            Db::commit();
+
+            $this->success('成功');
         }
 
         return $from->fetch();
@@ -105,7 +160,65 @@ class {$class_name} extends {$extends_class}
      */
     public function edit($id = '')
     {
-        $data = {php}echo $add_content['data_list'];{/php}->where(['{$master_table[1]}.id' => $id])->find();
+        $data = {php}echo $edit_content['data_list'];{/php}->where(['{$master_table[0]}.id' => $id])->find();
+
+        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
+        //显示字段
+        {foreach $edit_content['column'] as $key => $item }
+            {php}
+                if($edit_content['column_num'] <= $key){
+
+                echo $item.";\r\n";
+
+                }else{
+
+                echo $item."\r\n";
+
+                }
+            {/php}
+        {/foreach}
+
+        $from->setFormData($data);
+
+        if($this->request->isPost()){
+            $change_data = input();
+            $validate = new {$edit_content['validate_class']}();
+            if(!$validate->check($change_data)){
+                $this->error($validate->getError());
+            }
+
+            //数据分解
+            $update_data = [];
+            foreach ($change_data as $key => $item){
+                $arr = explode('_',$key,2);
+                if(!isset($arr[1])) continue;
+                if(key_exists($arr[0],$this->tables)){
+
+                    $table = $this->tables[$arr[0]];
+                    if($table['pk'] == $arr[1]){
+                        $update_data[$table['table']]['where'] = [$table['pk'] => $item];
+                    }else{
+                        $update_data[$table['table']]['data'][$arr[1]] = $item;
+                    }
+                    $update_data[$table['table']]['alias']= $arr[0] ;
+
+                }
+            }
+            //开启事务插入数据
+            Db::startTrans();
+            foreach ($update_data as $key => $item){
+                if(empty($item) or empty($item['where'])) continue;
+
+                if(!Db::name($key)->where($item['where'])->update($item['data'])){ //有的表可能没有更改会导致失败这个先注释掉
+                    //$this->error("表".$key."修改数据失败。");
+                }
+            }
+            Db::commit();
+
+            $this->success('成功');
+        }
+
+        return $from->fetch();
 
     }
 
@@ -115,7 +228,18 @@ class {$class_name} extends {$extends_class}
      */
     public function delete($record = [])
     {
+        $ids   = $this->request->isPost() ? input('post.ids/a') : input('param.ids');
+        $ids   = (array)$ids;
+        if(!$ids) $this->error('失败');
 
+        $table = $this->tables;
+        $table = array_shift($table);
+
+        if(Db::name($table['table'])->where([$table['pk'] => $ids])->delete()){
+            $this->success('删除成功。');
+        }
+
+        $this->error('删除失败。');
 
     }
 }
