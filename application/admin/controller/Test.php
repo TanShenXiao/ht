@@ -42,7 +42,7 @@ class Test extends Controller
                    'field' => 'id',
                    'table' => 'test',
                    'alias' => 'test',
-                   'name' => 'id',
+                   'name' => '用户id',
                    'is_search' => 1,
                    'search_data' => ['text','like','',[]],  //类型 匹配模式 默认值 附加 参数
                    'is_list' => 1,
@@ -56,7 +56,7 @@ class Test extends Controller
                    'field' => 'name',
                    'table' => 'test',
                    'alias' => 'test',
-                   'name' => '用户姓名1',
+                   'name' => '用户姓名122',
                    'is_search' => 1,
                    'search_data' => ['select','','','test2->name->id'],
                    'is_list' => 1,
@@ -83,7 +83,6 @@ class Test extends Controller
        ];
 
        $data['config'] = $config;
-
        $Generate = new Generate($data);
        t($Generate->create());
 

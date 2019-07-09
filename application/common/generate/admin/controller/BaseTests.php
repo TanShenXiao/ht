@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-08 18:29:16// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-09 09:58:39// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
@@ -50,12 +50,12 @@ class BaseTests extends Admin
         // 分页数据
         $page = $data_list->render();
 
-        $table = ZBuilder::make('table')
+        $table = ZBuilder::make('table')->setPageTitle('测试中_查看')
         //搜索字段
         ->setSearchArea([
         
-            ['text','test.id','id','like','',''],        
-            ['select','test.name','用户姓名1','','',$this->test_name],        
+            ['text','test.id','用户id','like','',''],        
+            ['select','test.name','用户姓名122','','',$this->test_name],        
             ['text','test2.name','用户姓名2','like','',''],        
         ])
 
@@ -63,8 +63,8 @@ class BaseTests extends Admin
 
         //显示字段
         
-            ->addColumn('test_id','id','text','')        
-            ->addColumn('test_name','用户姓名1','text','')        
+            ->addColumn('test_id','用户id','text','')        
+            ->addColumn('test_name','用户姓名122','text','')        
             ->addColumn('test2_name','用户姓名2','text','')        
             ->addColumn('right_button', '操作', 'btn')        
             ->addTopButton('add')       //顶部添加按钮        
@@ -85,8 +85,15 @@ class BaseTests extends Admin
      */
     public function add()
     {
+        $from = ZBuilder::make('form')->setPageTitle('测试中_添加');
 
 
+
+        if($this->request->isPost()){
+
+        }
+
+        return $from->fetch();
     }
 
      /**
@@ -95,7 +102,7 @@ class BaseTests extends Admin
      */
     public function edit($id = '')
     {
-
+        $data = Db::name('test test')->join('test2 test2','test.id = test2.pid','inner')->field('test.id as id')->where(['test.id' => $id])();
 
     }
 

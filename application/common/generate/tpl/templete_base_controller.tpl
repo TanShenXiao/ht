@@ -56,7 +56,7 @@ class {$class_name} extends {$extends_class}
         // 分页数据
         $page = $data_list->render();
 
-        $table = ZBuilder::make('table')
+        $table = ZBuilder::make('table')->setPageTitle('{$index_content['title']}')
         //搜索字段
         ->setSearchArea([
         {foreach $index_content['search'] as $item }
@@ -88,8 +88,15 @@ class {$class_name} extends {$extends_class}
      */
     public function add()
     {
+        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}');
 
 
+
+        if($this->request->isPost()){
+
+        }
+
+        return $from->fetch();
     }
 
      /**
@@ -98,7 +105,7 @@ class {$class_name} extends {$extends_class}
      */
     public function edit($id = '')
     {
-
+        $data = {php}echo $add_content['data_list'];{/php}->where(['{$master_table[1]}.id' => $id])->find();
 
     }
 

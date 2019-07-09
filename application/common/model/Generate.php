@@ -117,6 +117,53 @@ class Generate
      */
     protected $date = '';
 
+    /**
+     * 获取字段属性和字段应有的值
+     * @var array
+     */
+    protected $filed_data = [
+        'addCheckbox'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //复选
+        'addRadio'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //单选
+        'addDate'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['format','日期格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //日期
+        'addTime'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['format','日期格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //时间
+        'addSwitch'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['attr','属性',2],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //开关
+        'addTags'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //开关
+        'addArray'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //数组
+        'addGroup'      =>   [['groups','分组数据',2]],  //分组
+        'addRange'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['options','数据项',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //开关
+        'addButton'     =>   [['name','name值',1],['attr','属性',2],['ele_type','按钮类型',1]],  //按钮
+        'addNumber'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['min','最小值',1],['min','最大值',1],['step','步进值',1],['extra_attr','额外属性',2],['extra_class','额外css类',1]],  //数组框
+        'addPassword'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',2],['extra_class','额外css类',1]],  //密码框
+        'addColorpicker'=>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['mode','模式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //取色器
+        'addSelect'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //下拉菜单
+        'addLinkage'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',1],['ajax_url','异步请求地址',1],['next_items','后代name值',1],['param','请求参数名',1],['extra_param','extra_param',1]],  //普通联动
+        'addLinkages'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['table','表名',1],['level','级别数量',1],['default','默认值',1],['fields','字段名',1]],  //快速联动
+        'addSort'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['value','数据值',2],['extra_class','额外css类',1]],  //拖拽排序
+        'addStatic'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['hidden','属性',1],['extra_class','额外css类',1]],  //静态文本
+        'addMasked'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['format','格式',1],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //格式文本
+        'addDatetime'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['format','格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //日期时间
+        'addDaterange'  =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['format','格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //日期范围
+        'addJcrop'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['options','参数',2],['extra_class','额外css类',1]],  //图片剪辑
+        'addBmap'       =>   [['name','name值',1],['title','标题',1],['ak','秘钥',1],['tips','提示',1],['default','默认坐标',1],['level','显示级别',1],['extra_class','额外css类',1]],  //百度地图
+        'addFile'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['size','限制大小',1],['ext','文件后缀',1],['extra_class','额外css类',1]],  //单文件上传
+        'addFiles'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['size','限制大小',1],['ext','文件后缀',1],['extra_class','额外css类',1]],  //多文件上传
+        'addImage'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['size','限制大小',1],['ext','文件后缀',1],['extra_class','额外css类',1],['thumb','缩略参数',1],['watermark','水印参数',1]],  //单图片上传
+        'addImages'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['size','限制大小',1],['ext','文件后缀',1],['extra_class','额外css类',1],['thumb','缩略参数',1],['watermark','水印参数',1]],  //多图片上传
+        'addHidden'     =>   [['name','name值',1],['default','默认值',1],['extra_class','额外css类',1]],  //隐藏表单
+        'addIcon'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',2],['extra_class','额外css类',1]],  //图标选择器
+        'addText'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['group','标签分组',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //单行文本框
+        'addTextarea'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //多行文本框
+        'addUeditor'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //百度编辑器
+        'addCkeditor'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['width','宽度',1],['height','高度',1],['extra_class','额外css类',1]],  //CKEditor编辑器
+        'addWangeditor' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //wang编辑器
+        'addEditormd'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['watch','实时预览',3],['extra_class','额外css类',1]],  //markdown编辑器
+        'addSummernote' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['width','宽度',1],['height','高度',1],['extra_class','额外css类',1]],  //summernote编辑器
+        'addGallery'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //图片展示
+        'addArchive'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //单文件展示
+        'addArchives'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_class','额外css类',1]],  //多文件展示
+        'addSelectAjax' =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['params','参数',2],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //下拉菜单Ajax
+    ];
+
     protected $public_variable = [];
 
     public function __construct($data = [])
@@ -328,12 +375,23 @@ class Generate
             'change_date' => $this->date,
         ];
         $base_admin['class_name'] = $base_name.$config['class_name'];
-        //查询头封装
+        $base_admin['master_table'] = $this->get_master_table();               //获取主表信息用于条件查询
+        //index 所需数据封装
+        $base_admin['index_content']['title'] = $config['title'].'_查看';
         $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);   //列表查询封装
         $field = $this->analysis_field($config['field'],'is_list');                            //字段查询封装
         $base_admin['index_content']['data_list'] .= "->field('{$field}')";
         $base_admin['index_content']['search'] = $this->analysis_search($config['field']);      //搜索字段封装
         $base_admin['index_content']['column'] = $this->analysis_column($config['field']);     //显示列表字段封装
+        //add 所需数据封装
+        $base_admin['add_content']['title'] = $config['title'].'_添加';
+        $base_admin['add_content']['data_list'] = $this->analysis_table($config['table']);    //列表查询封装
+        $field = $this->analysis_field($config['field'],'is_add');                            //字段查询封装
+        $base_admin['add_content']['data_list'] .= "->field('{$field}')";
+
+
+
+
 
         $base_admin['public_variable'] = $this->public_variable;  //加载共用变量
 
@@ -372,8 +430,7 @@ class Generate
      */
     public function analysis_field($field,$is_show)
     {
-        $table_keys = array_keys($this->config['table']);
-        $main_alisa =$this->config['table'][$table_keys[0]];
+        $main_alisa = $this->get_master_table()[1];
         $str = "{$main_alisa}.id as id,";  //将主表的id添加到字段中
 
         foreach($field as $key => $value){
@@ -429,7 +486,7 @@ class Generate
     }
 
     /**
-     * 字段封装
+     * 显示字段封装 字段封装
      * @param $table
      * @return string
      */
@@ -465,6 +522,23 @@ class Generate
         }
 
         return $column;
+    }
+
+    public function analysis_form_column($field,$is_show = 'is_add')
+    {
+        $column = [];
+        foreach($field as $key => $value){
+            if(!isset($value[$is_show]) or !$value[$is_show]){
+                continue;
+            }
+
+            $value['field'] = $this->decompose($value['field']);
+
+
+            $data = array_merge(["{$value['alias']}_{$value['field']}",$value['name']],$value['list_data']);
+            $str = $this->preg_Separate(implode(',',$data));
+            $column[] = "->addColumn({$str})";
+        }
     }
 
     /**
@@ -544,6 +618,18 @@ class Generate
     {
         return isset($data[$field]) and $data[$field];
 
+    }
+
+    /**
+     * 获取主表信息 第一个是表名 第二个是表别名
+     * @return array
+     */
+    protected function get_master_table()
+    {
+        $table_keys = array_keys($this->config['table']);
+        $table = [$table_keys[0],$this->config['table'][$table_keys[0]]];
+
+        return $table;
     }
 
     /**
