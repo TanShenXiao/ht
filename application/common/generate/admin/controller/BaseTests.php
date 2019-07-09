@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-09 20:20:20// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-09 21:00:52// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
@@ -30,13 +30,11 @@ class BaseTests extends Admin
          parent::__construct($app);
 
         //共用变量
-
+        
         $this->tables = ['test' => ['table' => 'test','pk' => 'id'],'test2' => ['table' => 'test2','pk' => 'id'],'test3' => ['table' => 'test3','pk' => 'id']]; //数据表信息
-
+        
         $this->test_name = Db::name('test2')->column('name','id');
-
-        $this->test_created_time = Db::name('test2')->column('name','id');
-
+        
         //共用变量结束
 
     }
@@ -58,26 +56,26 @@ class BaseTests extends Admin
         $table = ZBuilder::make('table')->setPageTitle('测试中_查看')
         //搜索字段
         ->setSearchArea([
-
-            ['select','test.name','表1','','',$this->test_name],
-            ['select','test.created_time','表1','','',$this->test_created_time],
-            ['text','test2.name','表2','like','',''],
-            ['text','test3.name','表3','like','',''],
+        
+            ['select','test.name','表1','','',$this->test_name],        
+            ['daterange','test.created_time','表1','','',''],        
+            ['text','test2.name','表2','like','',''],        
+            ['text','test3.name','表3','like','',''],        
         ])
 
         //搜索字段结束
 
         //显示字段
-
-            ->addColumn('test_name','表1','text','')
-            ->addColumn('test_created_time','表1','text','')
-            ->addColumn('test2_name','表2','text','')
-            ->addColumn('test3_name','表3','text','')
-            ->addColumn('right_button', '操作', 'btn')
-            ->addTopButton('add')       //顶部添加按钮
-            ->addTopButton('delete')    //顶部删除按钮
-            ->addRightButton('edit')     //右边编辑按钮
-            ->addRightButton('delete')   //右边删除按钮
+        
+            ->addColumn('test_name','表1','text','')        
+            ->addColumn('test_created_time','表1','text','')        
+            ->addColumn('test2_name','表2','text','')        
+            ->addColumn('test3_name','表3','text','')        
+            ->addColumn('right_button', '操作', 'btn')        
+            ->addTopButton('add')       //顶部添加按钮        
+            ->addTopButton('delete')    //顶部删除按钮        
+            ->addRightButton('edit')     //右边编辑按钮        
+            ->addRightButton('delete')   //右边删除按钮        
         //显示字段结束
 
         ->setRowList($data_list) // 设置表格数据
@@ -99,7 +97,7 @@ class BaseTests extends Admin
         ->addDatetime('test_created_time','表1','时间','','','')
         ->addText('test2_name','表2','提示信息','','','','')
         ->addText('test3_name','表3','提示信息','','','','');
-
+        
         if($this->request->isPost()){
             $change_data = input();
             $validate = new ValidateTests();
@@ -131,15 +129,15 @@ class BaseTests extends Admin
             }
 
             //循环更新字段之间的关系
-
+            
             if(!Db::name('test2')->where(['id' => $test2_last_id])->update(['pid' => $test_last_id])){
                 $this->error("数据关系更新失败");
             }
-
+            
             if(!Db::name('test3')->where(['id' => $test3_last_id])->update(['tid' => $test_last_id])){
                 $this->error("数据关系更新失败");
             }
-
+            
             //更新字段关系结束
 
 
@@ -168,7 +166,7 @@ class BaseTests extends Admin
         ->addDatetime('test_created_time','表1','时间','','','')
         ->addText('test2_name','表2','提示信息','','','','')
         ->addText('test3_name','表3','提示信息','','','','');
-
+        
         $from->setFormData($data);
 
         if($this->request->isPost()){

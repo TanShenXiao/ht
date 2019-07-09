@@ -361,8 +361,12 @@ abstract class Connection
 
         //tanshenxiao加 如果匹配不到表前缀就把表前缀加起
         $prefix = $this->getConfig('prefix');
+        $database = $this->getConfig('database');
         if($prefix and !preg_match("/^{$prefix}/i",$tableName)){
-            $tableName = $prefix.$tableName;
+            $is_table = $this->query("select COUNT(TABLE_SCHEMA) AS num FROM information_schema.TABLES WHERE TABLE_SCHEMA='{$database}' AND TABLE_NAME = '{$tableName}'");
+            if($is_table[0]['num'] == 0){
+                $tableName = $prefix.$tableName;
+            }
         }
 
         list($tableName) = explode(' ', $tableName);
