@@ -13,6 +13,7 @@ namespace app\common\model;
 
 use think\Db;
 use think\View;
+use think\Validate;
 
 /**
  * Class Generate
@@ -24,73 +25,73 @@ class Generate
      * 基础控制器摸版的路径
      * @var string
      */
-    protected $templete_base_controller_file = ROOT_PATH.'/application/common/generate/tpl/templete_base_controller.tpl';
+    protected $templete_base_controller_file = APP_PATH.'/common/generate/tpl/templete_base_controller.tpl';
 
     /**
      * 控制器摸版
      * @var string
      */
-    protected $template_controller_file =  ROOT_PATH.'/application/common/generate/tpl/template_controller.tpl';
+    protected $template_controller_file =  APP_PATH.'/common/generate/tpl/template_controller.tpl';
 
     /**
      * 基礎验证器配置路径
      * @var string
      */
-    protected $template_base_validate_file =  ROOT_PATH.'/application/common/generate/tpl/template_base_validate.tpl';
+    protected $template_base_validate_file =  APP_PATH.'/common/generate/tpl/template_base_validate.tpl';
 
     /**
      * 验证器配置路径
      * @var string
      */
-    protected $template_validate_file =  ROOT_PATH.'/application/common/generate/tpl/template_validate.tpl';
+    protected $template_validate_file =  APP_PATH.'/common/generate/tpl/template_validate.tpl';
 
     /**
      * 基础控制器后台存放路径
      * @var
      */
-    protected $base_controller_path_admin = ROOT_PATH.'/application/common/generate/admin/controller';
+    protected $base_controller_path_admin;
 
     /**
      * 基础控制器api存放路径
      * @var
      */
-    protected $base_controller_path_api = ROOT_PATH.'/application/common/generate/api/controller';
+    protected $base_controller_path_api;
 
     /**
      * 基础校验器admin存放路径
      * @var mixed|string
      */
-    protected $base_validate_path_admin = ROOT_PATH.'/application/common/generate/admin/validate';
+    protected $base_validate_path_admin;
 
     /**
      *  基础校验器api存放路径
      * @var mixed|string
      */
-    protected $base_validate_path_api = ROOT_PATH.'/application/common/generate/api/validate';
+    protected $base_validate_path_api;
 
     /**
      * 控制器 后台 存放路径
      * @var
      */
-    protected $controller_path_admin = ROOT_PATH.'/application/admin/controller';
+    protected $controller_path_admin;
 
     /**
      * 控制器 api  存放路径
      * @var
      */
-    protected $controller_path_api = ROOT_PATH.'/application/admin/api';
+    protected $controller_path_api;
 
     /**
      * 校验器 后台 存放路径
      * @var
      */
-    protected $validate_path_admin =  ROOT_PATH.'/application/admin/validate/admin';
+    protected $validate_path_admin;
 
     /**
      * 校验器 api 存放路径
      * @var
      */
-    protected $validate_path_api =  ROOT_PATH.'/application/admin/validate/api';
+    protected $validate_path_api;
 
     /**
      * 生成器通用配置
@@ -117,8 +118,16 @@ class Generate
      */
     protected $date = '';
 
+    /**
+     * 表信息
+     * @var array
+     */
     protected $tables = [];
 
+    /**
+     * 主表信息
+     * @var array
+     */
     protected $master_tables = [];
 
     /**
@@ -174,10 +183,15 @@ class Generate
      */
     protected $public_variable = [];
 
+    /**
+     * 构造方法
+     * Generate constructor.
+     * @param array $data
+     */
     public function __construct($data = [])
     {
         //数据填充
-        if($this->is_existence($data,'templete_base_controller_file'))  $this->templete_base_controller_file = $data['templete_base_controller_file'];    //基础控制器摸版的路径
+        if($this->is_existence($data,'template_base_controller_file'))  $this->templete_base_controller_file = $data['template_base_controller_file'];    //基础控制器摸版的路径
         if($this->is_existence($data,'template_controller_file'))       $this->template_controller_file      = $data['template_controller_file'];         //控制器摸版
         if($this->is_existence($data,'template_base_validate_file'))    $this->template_base_validate_file   = $data['template_base_validate_file'];      //基礎验证器配置路径
         if($this->is_existence($data,'template_validate_file'))         $this->template_validate_file        = $data['template_validate_file'];           //验证器配置路径
@@ -193,8 +207,39 @@ class Generate
 
         $this->date = date('Y-m-d H:i:s');
 
+        //获取表信息
         $this->tables = $this->get_table();
         $this->master_tables = $this->get_table(true);
+
+        //路径设置
+        if(isset($this->config['module'])){
+            $module = $this->config['module'];
+            //判断基础控制器
+            if(!$this->base_controller_path_admin){
+                $this->base_controller_path_admin =  APP_PATH."/{$module}/backend_controller";
+            }
+            if(!$this->base_controller_path_api){
+                $this->base_controller_path_api =  APP_PATH."/{$module}/api_controller";
+            }
+            if(!$this->base_validate_path_admin){
+                $this->base_validate_path_admin =  APP_PATH."/{$module}/validate/backend_validate";
+            }
+            if(!$this->base_validate_path_api){
+                $this->base_validate_path_api =  APP_PATH."/{$module}/validate/api_validate";
+            }
+            if(!$this->controller_path_admin){
+                $this->controller_path_admin =  APP_PATH."/{$module}/controller";
+            }
+            if(!$this->controller_path_api){
+                $this->controller_path_api =  APP_PATH."/{$module}/api";
+            }
+            if(!$this->validate_path_admin){
+                $this->validate_path_admin =  APP_PATH."/{$module}/validate/backend";
+            }
+            if(!$this->validate_path_api){
+                $this->validate_path_api =  APP_PATH."/{$module}/validate/api";
+            }
+        }
 
         //数据校验
         $this->validate();
@@ -205,6 +250,15 @@ class Generate
      */
     public function validate()
     {
+        $validate = new Validate([
+            'module' => 'require'
+        ]);
+
+        if(!$validate->check($this->config))
+        {
+            $this->error_msg = $validate->getError();return;
+        }
+
         if(!is_file($this->templete_base_controller_file)){
             $this->error_msg = '找不到基础摸版控制文件';return;
         }
@@ -216,30 +270,6 @@ class Generate
         }
         if(!is_file($this->template_validate_file)){
             $this->error_msg = '找不到校验器摸控制文件';return;
-        }
-        if(!is_dir($this->base_controller_path_admin)){
-            $this->error_msg = '找不到存放基础后台类的目录';return;
-        }
-        if(!is_dir($this->base_controller_path_api)){
-            $this->error_msg = '找不到存放基础api类的目录';return;
-        }
-        if(!is_dir($this->base_validate_path_admin)){
-            $this->error_msg = '找不到存放基础后台校验器的目录';return;
-        }
-        if(!is_dir($this->base_validate_path_api)){
-            $this->error_msg = '找不到存放基础api消焰器校验器类的目录';return;
-        }
-        if(!is_dir($this->controller_path_admin)){
-            $this->error_msg = '找不到存放后台类的目录';return;
-        }
-        if(!is_dir($this->controller_path_api)){
-            $this->error_msg = '找不到存放api类的目录';return;
-        }
-        if(!is_dir($this->validate_path_admin)){
-            $this->error_msg = '找不到存放后台校验器的目录';return;
-        }
-        if(!is_dir($this->validate_path_api)){
-            $this->error_msg = '找不到存api校验器类目';return;
         }
     }
 
@@ -279,7 +309,8 @@ class Generate
         $base_admin = $this->diy_controller($config);
         $base_admin['namespace'] = $this->created_namespace($this->base_controller_path_admin);
         $this->created_file($this->templete_base_controller_file,$this->base_controller_path_admin,$base_admin);
-        //生成前台控制器
+
+        //生成后台控制器
         $admin = [
             'use' => [
                  $base_admin['namespace'].'\\'.$base_admin['class_name'],
@@ -364,16 +395,6 @@ class Generate
     protected function diy_controller($config)
     {
         $base_name = 'Base';
-        $base_validate = [      //基础数据
-            'use' => [
-                'think\Validate'
-            ],
-            'extends_class' => 'Validate',
-            'rule' => [],
-            'message' => [],
-            'scene' => [],
-            'change_date' => $this->date,
-        ];
         //生成基础后台控制器
         $validate_namespace = $this->config['validate_namespace'];
         $base_admin = [
@@ -394,27 +415,27 @@ class Generate
         $base_admin['master_table'] = $this->master_tables;                  //获取主表信息
 
         //index 所需数据封装
-        $base_admin['index_content']['title'] = $config['title'].'_查看';
-        $base_admin['index_content']['data_list'] = $this->analysis_table($config['table']);   //列表查询封装
-        $field = $this->analysis_field($config['field'],'is_list');                            //字段查询封装
-        $base_admin['index_content']['data_list'] .= "->field('{$field}')";
-        $base_admin['index_content']['search'] = $this->analysis_search($config['field']);      //搜索字段封装
-        $base_admin['index_content']['column'] = $this->analysis_column($config['field']);     //显示列表字段封装
+        $field = $this->analysis_field($config['field'],'is_list');                                  //字段查询封装
+        $base_admin['index_content']['title']         = $config['title'].'_查看';
+        $base_admin['index_content']['data_list']     = $this->analysis_table($config['table']);     //列表查询封装
+        $base_admin['index_content']['data_list']    .= "\r\n\t\t\t->field('{$field}')";
+        $base_admin['index_content']['search']        = $this->analysis_search($config['field']);    //搜索字段封装
+        $base_admin['index_content']['column']        = $this->analysis_column($config['field']);    //显示列表字段封装
 
         //add 所需数据封装
-        $base_admin['add_content']['title'] = $config['title'].'_添加';
-        $base_admin['add_content']['column'] = $this->analysis_form_column($config['field'],'is_from'); //编辑字段
-        $base_admin['add_content']['column_num'] = count($base_admin['add_content']['column'])-1;
-        $base_admin['add_content']['validate_class'] = $this->config['validate_name'];
-        $base_admin['add_content']['relationship'] = $this->Relationship();
+        $base_admin['add_content']['title']           = $config['title'].'_添加';
+        $base_admin['add_content']['column']          = $this->analysis_form_column($config['field'],'is_add'); //编辑字段
+        $base_admin['add_content']['column_num']      = count($base_admin['add_content']['column'])-1;
+        $base_admin['add_content']['validate_class']  = $this->config['validate_name'];
+        $base_admin['add_content']['relationship']    = $this->Relationship();
 
         //edit 所需数据封装
-        $base_admin['edit_content']['title'] = $config['title'].'_编辑';
-        $base_admin['edit_content']['data_list'] = $this->analysis_table($config['table']);    //列表查询封装
-        $field = $this->analysis_field($config['field'],'is_from',true);                             //字段查询封装
-        $base_admin['edit_content']['data_list'] .= "->field('{$field}')";
-        $base_admin['edit_content']['column'] = $this->analysis_form_column($config['field'],'is_from',true); //编辑字段
-        $base_admin['edit_content']['column_num'] = count($base_admin['edit_content']['column'])-1;
+        $field = $this->analysis_field($config['field'],'is_edit',true);                             //字段查询封装
+        $base_admin['edit_content']['title']          = $config['title'].'_编辑';
+        $base_admin['edit_content']['data_list']      = $this->analysis_table($config['table']);    //列表查询封装
+        $base_admin['edit_content']['data_list']     .= "\r\n\t\t\t->field('{$field}')";
+        $base_admin['edit_content']['column']         = $this->analysis_form_column($config['field'],'is_edit',true); //编辑字段
+        $base_admin['edit_content']['column_num']     = count($base_admin['edit_content']['column'])-1;
         $base_admin['edit_content']['validate_class'] = $this->config['validate_name'];
 
         $this->Relationship();
@@ -443,8 +464,7 @@ class Generate
                 $str .= $key." {$value}')";
                 continue;
             }
-
-            $str .="->join('{$key} {$value[0]}','{$value[1][0]}','{$value[1][1]}')";
+            $str .="\r\n\t\t\t->join('{$key} {$value[0]}','{$value[1][0]}','{$value[1][1]}')";
         }
 
         return $str;
@@ -507,14 +527,21 @@ class Generate
                 $value['search_data'][3] = '$this->'.$field;
 
             } elseif(empty($value['search_data'][3])){
+
                 $value['search_data'][3] = "''";
+
             }elseif ($this->Relation_filed($value['search_data'][3])){
+
                 if(!isset($this->public_variable[$field]) or $this->public_variable[$field]){
                     $this->public_variable[$field] = $this->Relation_filed($value['search_data'][3]).';';
                 }
+
                 $value['search_data'][3] = '$this->'.$field;
+
             } else{
+
                 $value['search_data'][3] = "'{$value['search_data'][3]}'";
+
             }
 
             $search[] = "['{$value['search_data'][0]}','{$value['table']}.{$value['field']}','{$value['name']}','{$value['search_data'][1]}','{$value['search_data'][2]}',{$value['search_data'][3]}],";
@@ -549,14 +576,14 @@ class Generate
         }
         //判断是否需要 添加 编辑 删除按钮
         if($this->config['is_add']){
-             $column[] = "->addTopButton('add')       //顶部添加按钮";
-             $column[] = "->addTopButton('delete')    //顶部删除按钮";
+             $column[] = "->addTopButton('add')";
+             $column[] = "->addTopButton('delete')";
         }
         if($this->config['is_edit']){
-            $column[] = "->addRightButton('edit')     //右边编辑按钮";
+            $column[] = "->addRightButton('edit')";
         }
         if($this->config['is_delete']){
-            $column[] = "->addRightButton('delete')   //右边删除按钮";
+            $column[] = "->addRightButton('delete')";
         }
 
         return $column;
@@ -617,12 +644,18 @@ class Generate
                         $data[$item[0]] = '';
                     }
                 }
-                $str .="'".$data[$item[0]]."',";
+
+                if(is_array($data[$item[0]])){
+                    $str .= $this->array_to_string($data[$item[0]]).",";
+                }elseif(preg_match('/^$.?/i',$data[$item[0]])){
+                    $str .= $data[$item[0]].",";
+                }else{
+                    $str .="'".$data[$item[0]]."',";
+                }
             }
 
             $column[] = trim($str,',').')';
         }
-
         return $column;
     }
 
@@ -645,7 +678,7 @@ class Generate
      */
     public function created_namespace($path)
     {
-        $namespace = str_replace(ROOT_PATH,'',$path);
+        $namespace = str_replace(dirname(APP_PATH),'',$path);
         $namespace = str_replace('application','app',$namespace);
         $namespace = trim(str_replace('/','\\',$namespace),'\\');
 
@@ -679,6 +712,9 @@ class Generate
         }
         $content = $this->View->fetch($file,$var);
         $content = "<?php\n".$content;
+        if(!is_dir($target)){  //如果文件不存在新建
+            mkdir($target);
+        }
         return file_put_contents($this->get_created_path($target,$var['class_name']),$content);
     }
 
@@ -746,14 +782,9 @@ class Generate
      */
     public function array_to_string($array)
     {
-        $str = '';
-        $i =0;
+        $str = '[';
         if(!is_array($array)) return '';
         foreach ($array as $key => $value){
-            $i++;
-            if($i == 1){
-                $str .="[";
-            }
             if(is_array($value)){
                 $val = $this->array_to_string($value);
                 if(!preg_match('/^\[.*\]$/i',$val)){
@@ -774,10 +805,9 @@ class Generate
             }
             $str .= "'{$key}' => {$val},";
         }
-        if($i > 0){
-            $str  = trim($str,',');
-            $str .=']';
-        }
+
+        $str  = trim($str,',');
+        $str .=']';
 
         return $str;
     }
@@ -807,11 +837,10 @@ class Generate
         //条件分析
         $tables = $this->config['table'];
          array_shift($tables);
-        foreach ($tables as $key => $item)
+        foreach ($tables as $keys => $item)
         {
             if(!isset($item[1][0])) continue;
             //关系分析
-            //$gx = explode('and',$)
             $on = preg_replace('/(or|and){1}.*$/i','',$item[1][0]);
             $on = explode('=',$on);
             if(!isset($on['0']) or !isset($on[1])){
@@ -819,11 +848,12 @@ class Generate
             }
             $on[0] = explode('.',trim($on[0]));
             $on[1] = explode('.',trim($on[1]));
-            //查看他们之间的关系那个是主键
+            //查看他们之间的关系那个是主键 在条件里面必须要一个主键 一个非主键
             foreach ($on as $key => $item){
                 $pkey = $key == 1? 0:1;
-                if($this->tables[$item[0]]['pk'] == $item[1]) continue;
-                $add_Relationship[] = "Db::name('{$this->tables[$item[0]]['table']}')->where(['{$this->tables[$item[0]]['pk']}' => \${$item[0]}_last_id])->update(['{$item[1]}' => \${$on[$pkey][0]}_last_id])";
+                if($this->tables[$item[0]]['pk'] == $item[1] or $this->tables[$on[$pkey][0]]['pk'] != $on[$pkey][1]) continue;
+                $add_Relationship[$keys]['Db'] = "Db::name('{$this->tables[$item[0]]['table']}')->where(['{$this->tables[$item[0]]['pk']}' => \${$item[0]}_last_id])->update(['{$item[1]}' => \${$on[$pkey][0]}_last_id])";
+                $add_Relationship[$keys]['variable'] = ["\${$item[0]}_last_id","\${$on[$pkey][0]}_last_id"];
                 break;
             }
         }

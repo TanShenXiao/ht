@@ -11,7 +11,7 @@
 namespace app\admin\controller;
 
 
-use app\common\generate\admin\controller\BaseTests;
+use app\admin\backend_controller\BaseTests;
 
 
 class Tests extends BaseTests

@@ -10,9 +10,6 @@ namespace {$namespace};
 
 use think\Db;
 use app\common\builder\ZBuilder;
-use app\admin\model\Attachment as AttachmentModel;
-use think\Image;
-use think\File;
 use think\App;
 {foreach $use as $item }
 use {$item};
@@ -48,36 +45,36 @@ class {$class_name} extends {$extends_class}
      */
     public function index()
     {
-        // 获取筛选
+        //获取筛选
         $map = $this->getMap();
         $order = $this->getOrder();
 
-        $data_list = {php}echo $index_content['data_list'];{/php}->where($map)->order($order)->paginate();
-        // 分页数据
+        $data_list = {php}echo $index_content['data_list']."\r\n\t\t\t->where(\$map)->order(\$order)->paginate()";{/php};
+
+        //分页数据
         $page = $data_list->render();
 
         $table = ZBuilder::make('table')->setPageTitle('{$index_content['title']}')
-        //搜索字段
-        ->setSearchArea([
-        {foreach $index_content['search'] as $item }
+            //搜索字段
+            ->setSearchArea([
+            {foreach $index_content['search'] as $item }
+
+                {php}echo $item;{/php}
+            {/foreach}
+
+            ])
+            //搜索字段结束
+
+            //显示字段
+            {foreach $index_content['column'] as $key => $item }
 
             {php}echo $item;{/php}
-        {/foreach}
+            {/foreach}
 
-        ])
+            //显示字段结束
 
-        //搜索字段结束
-
-        //显示字段
-        {foreach $index_content['column'] as $item }
-
-            {php}echo $item;{/php}
-        {/foreach}
-
-        //显示字段结束
-
-        ->setRowList($data_list) // 设置表格数据
-        ->setPages($page); // 设置分页数据
+            ->setRowList($data_list)
+            ->setPages($page);
 
         return $table->fetch();
     }
@@ -90,20 +87,20 @@ class {$class_name} extends {$extends_class}
     {
         $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
 
-        //显示字段
-        {foreach $add_content['column'] as $key => $item }
-        {php}
-           if($add_content['column_num'] <= $key){
+            //显示字段
+            {foreach $add_content['column'] as $key => $item }
+            {php}
+               if($add_content['column_num'] <= $key){
 
-            echo $item.";\r\n";
+                echo $item.";\r\n";
 
-            }else{
+                }else{
 
-            echo $item."\r\n";
+                echo $item."\r\n";
 
-            }
-        {/php}
-        {/foreach}
+                }
+            {/php}
+            {/foreach}
 
         if($this->request->isPost()){
             $change_data = input();
@@ -135,15 +132,15 @@ class {$class_name} extends {$extends_class}
                 $$last_id_name = Db::getLastInsID();
             }
 
-            //循环更新字段之间的关系
+            //更新字段之间的关系
             {foreach $add_content['relationship'] as $key => $item }
 
-            if(!{php}echo $item;{/php}){
+            if(isset({$item['variable'][0]}) and isset({$item['variable'][1]}) and !{php}echo $item['Db'];{/php}){
                 $this->error("数据关系更新失败");
             }
             {/foreach}
 
-            //更新字段关系结束
+            //字段关系结束
 
 
             Db::commit();
@@ -160,23 +157,27 @@ class {$class_name} extends {$extends_class}
      */
     public function edit($id = '')
     {
-        $data = {php}echo $edit_content['data_list'];{/php}->where(['{$master_table[0]}.id' => $id])->find();
+        $data = {php}echo $edit_content['data_list']."\r\n\t\t\t->where(['".$master_table[0].".id' => \$id])->find()";{/php};
+
+        if(!$data){
+            $this->error('数据不存在，请重新打开此页面');
+        }
 
         $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
-        //显示字段
-        {foreach $edit_content['column'] as $key => $item }
-            {php}
-                if($edit_content['column_num'] <= $key){
+            //显示字段
+            {foreach $edit_content['column'] as $key => $item }
+                {php}
+                    if($edit_content['column_num'] <= $key){
 
-                echo $item.";\r\n";
+                    echo $item.";\r\n";
 
-                }else{
+                    }else{
 
-                echo $item."\r\n";
+                    echo $item."\r\n";
 
-                }
-            {/php}
-        {/foreach}
+                    }
+                {/php}
+            {/foreach}
 
         $from->setFormData($data);
 
