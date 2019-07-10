@@ -125,8 +125,39 @@ class Test extends Controller
        $data = ['a' => 'face_api'];
        echo $this->$data['a']();
    }
-   public function face_api()
+   public function test3($app_path = APP_PATH)
    {
-       echo 'aaaa';
+        $dir = scandir($app_path);
+        $dirs = [];
+        foreach ($dir as $name){
+            $value = $app_path.'/'.$name;
+            if($name == '.' or $name == '..' or (is_file($value) and pathinfo($value)['extension'] != 'php')) continue;
+            if(is_dir($value)){
+                $dirs = array_merge($dirs,$this->test3($value));
+            }else{
+                $dirs[] = $value;
+            }
+        }
+
+        return $dirs;
    }
+
+    public function test2()
+    {
+        t($this->test3());
+    }
+
+    /**
+     * 获取路径对应的命名空间
+     * @param $path
+     * @return mixed|string
+     */
+    public function created_namespace($path)
+    {
+        $namespace = str_replace(dirname(APP_PATH),'',$path);
+        $namespace = str_replace('application','app',$namespace);
+        $namespace = trim(str_replace('/','\\',$namespace),'\\');
+
+        return $namespace;
+    }
 }
