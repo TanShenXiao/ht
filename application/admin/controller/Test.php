@@ -125,26 +125,17 @@ class Test extends Controller
        $data = ['a' => 'face_api'];
        echo $this->$data['a']();
    }
-   public function test3($app_path = APP_PATH)
-   {
-        $dir = scandir($app_path);
-        $dirs = [];
-        foreach ($dir as $name){
-            $value = $app_path.'/'.$name;
-            if($name == '.' or $name == '..' or (is_file($value) and pathinfo($value)['extension'] != 'php')) continue;
-            if(is_dir($value)){
-                $dirs = array_merge($dirs,$this->test3($value));
-            }else{
-                $dirs[] = $value;
-            }
-        }
 
-        return $dirs;
-   }
 
     public function test2()
     {
-        t($this->test3());
+
+        $name = '   号';
+        echo '<pre>';
+        echo $name;
+        echo '<br>';
+        echo preg_replace("/\s/i",'',$name);
+
     }
 
     /**

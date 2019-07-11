@@ -14,7 +14,11 @@ use think\App;
 use app\admin\controller\Admin;
 use app\admin\validate\backend\ValidateTests;
 
-
+/**
+ * 这是一个那几的
+ * Class BaseTests
+ * @package app\admin\backend_controller
+ */
 class BaseTests extends Admin
 {
 
@@ -244,4 +248,10 @@ class BaseTests extends Admin
         $this->error('删除失败。');
 
     }
-}
+
+    function sss()
+    {
+        
+    }
+}   
+        
