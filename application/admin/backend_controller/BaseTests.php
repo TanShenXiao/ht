@@ -1,32 +1,30 @@
+<?php
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: {$change_date}
-// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-10 18:42:43// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace {$namespace};
+namespace app\admin\backend_controller;
 
 use think\Db;
 use app\common\builder\ZBuilder;
 use think\App;
-{foreach $use as $item }
-use {$item};
-{/foreach}
+use app\admin\controller\Admin;
+use app\admin\validate\backend\ValidateTests;
 
 
-class {$class_name} extends {$extends_class}
-
+class BaseTests extends Admin
 {
 
-    {foreach $public_variable as $key => $item }
-
-     //{$item['describe']}
-
-     protected ${php}echo $key;{/php};
-    {/foreach}
-     /**
+    
+     //数据表信息
+     protected $tables;
+    
+     //表1关联数据
+     protected $test_status;
+         /**
      * 构造方法
      * @access public
      */
@@ -34,11 +32,11 @@ class {$class_name} extends {$extends_class}
     {
          parent::__construct($app);
 
-        {foreach $public_variable as $key => $item }
 
-        $this->{php}echo $key.' = '.$item['data'];{/php};
-        {/foreach}
-
+        $this->tables = ['test' => ['table' => 'test','pk' => 'id'],'test2' => ['table' => 'test2','pk' => 'id'],'test3' => ['table' => 'test3','pk' => 'id']];
+        
+        $this->test_status = Db::name('test2')->column('name','id');
+        
     }
 
      /**
@@ -51,28 +49,36 @@ class {$class_name} extends {$extends_class}
         $map = $this->getMap();
         $order = $this->getOrder();
 
-        $data_list = {php}echo $index_content['data_list']."\r\n\t\t\t->where(\$map)->order(\$order)->paginate()";{/php};
+        $data_list = Db::name('test test')
+			->join('test2 test2','test.id = test2.pid','inner')
+			->join('test3 test3','test.id = test3.tid','inner')
+			->field('test.id as id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test3.name as test3_name')
+			->where($map)->order($order)->paginate();
 
         //分页数据
         $page = $data_list->render();
 
-        $table = ZBuilder::make('table')->setPageTitle('{$index_content['title']}')
+        $table = ZBuilder::make('table')->setPageTitle('测试中_查看')
             //搜索字段
             ->setSearchArea([
-            {foreach $index_content['search'] as $item }
-
-                {php}echo $item;{/php}
-            {/foreach}
-
+            
+                ['daterange','test.created_time','表1','','',''],            
+                ['text','test3.name','表3','like','',''],            
             ])
             //搜索字段结束
 
             //显示字段
-            {foreach $index_content['column'] as $key => $item }
-
-            {php}echo $item;{/php}
-            {/foreach}
-
+            
+            ->addColumn('test_name','表1','text','')            
+            ->addColumn('test_created_time','表1','text','')            
+            ->addColumn('test_status','表1','text','')            
+            ->addColumn('test2_name','表2','text','')            
+            ->addColumn('test3_name','表3','text','')            
+            ->addColumn('right_button', '操作', 'btn')            
+            ->addTopButton('add')            
+            ->addTopButton('delete')            
+            ->addRightButton('edit')            
+            ->addRightButton('delete')            
             //显示字段结束
 
             ->setRowList($data_list)
@@ -87,26 +93,18 @@ class {$class_name} extends {$extends_class}
      */
     public function add()
     {
-        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
+        $from = ZBuilder::make('form')->setPageTitle('测试中_添加')
 
             //显示字段
-            {foreach $add_content['column'] as $key => $item }
-            {php}
-               if($add_content['column_num'] <= $key){
-
-                echo $item.";\r\n";
-
-                }else{
-
-                echo $item."\r\n";
-
-                }
-            {/php}
-            {/foreach}
-
+            ->addText('test_name','表1','提示信息','','','','')
+            ->addDatetime('test_created_time','表1','时间','','','')
+            ->addSelect('test_status','表1','时间',$this->test_status,'','','')
+            ->addText('test2_name','表2','提示信息','','','','')
+            ->addText('test3_name','表3','提示信息','','','','');
+            
         if($this->request->isPost()){
             $change_data = input();
-            $validate = new {$add_content['validate_class']}();
+            $validate = new ValidateTests();
             if(!$validate->check($change_data)){
                 $this->error($validate->getError());
             }
@@ -135,13 +133,15 @@ class {$class_name} extends {$extends_class}
             }
 
             //更新字段之间的关系
-            {foreach $add_content['relationship'] as $key => $item }
-
-            if(isset({$item['variable'][0]}) and isset({$item['variable'][1]}) and !{php}echo $item['Db'];{/php}){
+            
+            if(isset($test2_last_id) and isset($test_last_id) and !Db::name('test2')->where(['id' => $test2_last_id])->update(['pid' => $test_last_id])){
                 $this->error("数据关系更新失败");
             }
-            {/foreach}
-
+            
+            if(isset($test3_last_id) and isset($test_last_id) and !Db::name('test3')->where(['id' => $test3_last_id])->update(['tid' => $test_last_id])){
+                $this->error("数据关系更新失败");
+            }
+            
             //字段关系结束
 
 
@@ -159,33 +159,32 @@ class {$class_name} extends {$extends_class}
      */
     public function edit($id = '')
     {
-        $data = {php}echo $edit_content['data_list']."\r\n\t\t\t->where(['".$master_table[0].".id' => \$id])->find()";{/php};
+        $data = Db::name('test test')
+			->join('test2 test2','test.id = test2.pid','inner')
+			->join('test3 test3','test.id = test3.tid','inner')
+			->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test3.name as test3_name')
+			->where(['test.id' => $id])->find();
 
         if(!$data){
             $this->error('数据不存在，请重新打开此页面');
         }
 
-        $from = ZBuilder::make('form')->setPageTitle('{$add_content['title']}')
+        $from = ZBuilder::make('form')->setPageTitle('测试中_添加')
             //显示字段
-            {foreach $edit_content['column'] as $key => $item }
-                {php}
-                    if($edit_content['column_num'] <= $key){
-
-                    echo $item.";\r\n";
-
-                    }else{
-
-                    echo $item."\r\n";
-
-                    }
-                {/php}
-            {/foreach}
-
+            ->addHidden('test_id','')
+            ->addHidden('test2_id','')
+            ->addHidden('test3_id','')
+            ->addText('test_name','表1','提示信息','','','','')
+            ->addDatetime('test_created_time','表1','时间','','','')
+            ->addSelect('test_status','表1','时间',$this->test_status,'','','')
+            ->addText('test2_name','表2','提示信息','','','','')
+            ->addText('test3_name','表3','提示信息','','','','');
+            
         $from->setFormData($data);
 
         if($this->request->isPost()){
             $change_data = input();
-            $validate = new {$edit_content['validate_class']}();
+            $validate = new ValidateTests();
             if(!$validate->check($change_data)){
                 $this->error($validate->getError());
             }

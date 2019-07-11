@@ -80,7 +80,7 @@ class Test extends Controller
                'list_data' => ['text',''],
                'is_add' => 1,
                'is_edit' => 1,
-               'form_data' => ['type' => 'Select','tips' => '时间','options' => ['1' => 2,'3' => '4','5' => 'kkkkk']],
+               'form_data' => ['type' => 'Select','tips' => '时间','options' => 'test2->name->id'],
                'is_validate' => 1,
                'validate_data' => ['require'],
            ]

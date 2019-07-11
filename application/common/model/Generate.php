@@ -135,8 +135,8 @@ class Generate
      * @var array
      */
     protected $filed_data = [
-        'addCheckbox'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //复选
-        'addRadio'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //单选
+        'addCheckbox'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',1],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //复选
+        'addRadio'      =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',1],['attr','属性',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //单选
         'addDate'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['format','日期格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //日期
         'addTime'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['format','日期格式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //时间
         'addSwitch'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['attr','属性',2],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //开关
@@ -148,7 +148,7 @@ class Generate
         'addNumber'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['min','最小值',1],['min','最大值',1],['step','步进值',1],['extra_attr','额外属性',2],['extra_class','额外css类',1]],  //数组框
         'addPassword'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['extra_attr','额外属性',2],['extra_class','额外css类',1]],  //密码框
         'addColorpicker'=>   [['name','name值',1],['title','标题',1],['tips','提示',1],['default','默认值',1],['mode','模式',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //取色器
-        'addSelect'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',2],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //下拉菜单
+        'addSelect'     =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',1],['extra_attr','额外属性',1],['extra_class','额外css类',1]],  //下拉菜单
         'addLinkage'    =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['options','数据项',2],['default','默认值',1],['ajax_url','异步请求地址',1],['next_items','后代name值',1],['param','请求参数名',1],['extra_param','extra_param',1]],  //普通联动
         'addLinkages'   =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['table','表名',1],['level','级别数量',1],['default','默认值',1],['fields','字段名',1]],  //快速联动
         'addSort'       =>   [['name','name值',1],['title','标题',1],['tips','提示',1],['value','数据值',2],['extra_class','额外css类',1]],  //拖拽排序
@@ -411,7 +411,8 @@ class Generate
             'change_date' => $this->date,
         ];
         $base_admin['class_name'] = $base_name.$config['class_name'];
-        $this->public_variable['tables'] = $this->array_to_string($this->tables).'; //数据表信息';           //获取主表信息用于条件查询
+        $this->public_variable['tables']['data'] = $this->array_to_string($this->tables);//获取主表信息用于条件查询
+        $this->public_variable['tables']['describe'] = '数据表信息';
         $base_admin['master_table'] = $this->master_tables;                  //获取主表信息
 
         //index 所需数据封装
@@ -522,7 +523,8 @@ class Generate
             //数组对象不能直接传参对数据经行转换
             if(is_array($value['search_data'][3]) and !empty($value['search_data'][3])){
                 if(!isset($this->public_variable[$field]) or $this->public_variable[$field]){
-                    $this->public_variable[$field] = $this->array_to_string($value['search_data'][3]).';';
+                    $this->public_variable[$field]['data'] = $this->array_to_string($value['search_data'][3]);
+                    $this->public_variable[$field]['describe'] = $value['name'].'关联数据';
                 }
                 $value['search_data'][3] = '$this->'.$field;
 
@@ -532,8 +534,9 @@ class Generate
 
             }elseif ($this->Relation_filed($value['search_data'][3])){
 
-                if(!isset($this->public_variable[$field]) or $this->public_variable[$field]){
-                    $this->public_variable[$field] = $this->Relation_filed($value['search_data'][3]).';';
+                if(!isset($this->public_variable[$field]) or !$this->public_variable[$field]){
+                    $this->public_variable[$field]['data'] = $this->Relation_filed($value['search_data'][3]);
+                    $this->public_variable[$field]['describe'] = $value['name'].'关联数据';
                 }
 
                 $value['search_data'][3] = '$this->'.$field;
@@ -614,7 +617,7 @@ class Generate
             if(!isset($value[$is_show]) or !$value[$is_show]){
                 continue;
             }
-
+            $field = $value['alias'].'_'.$value['field'];
             $value['field'] = $this->decompose($value['field']);
             $data = $value['form_data'];
             if(!key_exists('add'.$data['type'],$this->filed_data)){  //如果获取不到默认取单行文本框
@@ -624,7 +627,7 @@ class Generate
                 $data['title'] = $value['name'];
             }
             if(!isset($data['name'])){
-                $data['name'] = $value['alias'].'_'.$value['field'];
+                $data['name'] = $field;
             }
 
             $filed_data = $this->filed_data['add'.$data['type']];
@@ -644,10 +647,18 @@ class Generate
                         $data[$item[0]] = '';
                     }
                 }
+                //判断 是否有表关联
+                if($item[0] == 'options' and !is_array($data[$item[0]]) and $this->Relation_filed($data[$item[0]])){
+                    if(!isset($this->public_variable[$field]) or !$this->public_variable[$field]){
+                        $this->public_variable[$field]['data'] = $this->Relation_filed($data[$item[0]]);
+                        $this->public_variable[$field]['describe'] = $value['name'].'关联数据';
+                    }
+                    $data[$item[0]] = '$this->'.$field;
+                }
 
                 if(is_array($data[$item[0]])){
                     $str .= $this->array_to_string($data[$item[0]]).",";
-                }elseif(preg_match('/^$.?/i',$data[$item[0]])){
+                }elseif(preg_match('/^\$.+/i',$data[$item[0]])){
                     $str .= $data[$item[0]].",";
                 }else{
                     $str .="'".$data[$item[0]]."',";
