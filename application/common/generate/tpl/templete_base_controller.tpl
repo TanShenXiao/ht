@@ -15,7 +15,9 @@ use think\App;
 use {$item};
 {/foreach}
 
-
+/**
+* [Final] 基类不可以修改
+*/
 class {$class_name} extends {$extends_class}
 
 {
@@ -26,6 +28,7 @@ class {$class_name} extends {$extends_class}
 
      protected ${php}echo $key;{/php};
     {/foreach}
+
      /**
      * 构造方法
      * @access public

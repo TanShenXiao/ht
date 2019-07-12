@@ -95,7 +95,21 @@ class Test extends Controller
                    'list_data' => ['text',''],
                    'is_add' => 1,
                    'is_edit' => 1,
-                   'form_data' => ['type' => 'text','tips' => '提示信息',],
+                   'form_data' => ['type' => 'text','tips' => '提示信息'],
+                   'is_validate' => 1,
+                   'validate_data' => ['require'],
+               ],[
+                   'field' => 'city',
+                   'table' => 'test2',
+                   'alias' => 'test2',
+                   'name' => '表2地区',
+                   'is_search' => 0,
+                   'search_data' => ['text','like','',[]],
+                   'is_list' => 1,
+                   'list_data' => ['text',''],
+                   'is_add' => 1,
+                   'is_edit' => 1,
+                   'form_data' => ['type' => 'Linkages','tips' => '提示信息','table' => 'origin','level' => 3],
                    'is_validate' => 1,
                    'validate_data' => ['require'],
                ],
@@ -130,11 +144,7 @@ class Test extends Controller
     public function test2()
     {
 
-        $name = '   号';
-        echo '<pre>';
-        echo $name;
-        echo '<br>';
-        echo preg_replace("/\s/i",'',$name);
+
 
     }
 
@@ -151,4 +161,5 @@ class Test extends Controller
 
         return $namespace;
     }
-}
+}   
+        

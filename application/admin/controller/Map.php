@@ -73,13 +73,17 @@ class Map extends Admin
      */
     public function add($module = 'admin', $pid = '')
     {
-        $path = input('path','E:\code\php\ht\application/admin/backend_controller/BaseTests.php');
-        $function_name = input('name');
+        $path = base64_decode(input('function_path',''));
+        $function_name = input('function_name');
         $function_content = input('function_content');
+        $function_comment = input('function_comment');
+        $function_param = input('function_param','');
+
         if(!is_file($path)) $this->error('请选择文件路径。');
         if(!$function_name) $this->error('请输入函数名称。');
+        if(!$function_comment) $this->error('请输入函数备注。');
 
-        $result = $this->module->add_code($path,$function_name,[]);
+        $result = $this->module->add_code($path,$function_name,$function_param,$function_content,$function_comment);
         if($result === true){
             $this->success('成功');
         }
@@ -152,7 +156,7 @@ class Map extends Admin
                 $disable  = 0 ? 'dd-disable' : '';
                 if($value['type'] == 'dir'){
                     $value['icon'] = 'fa fa-fw fa-folder';
-                }elseif ($value['type'] == 'dir'){
+                }elseif ($value['type'] == 'file'){
                     $value['icon'] = 'fa fa-fw fa-paste';
                 }else{
                     $value['icon'] = 'fa fa-fw fa-pencil';
@@ -174,9 +178,12 @@ class Map extends Admin
                 }
 
                 if($value['type'] == 'file'){
-                    $result .= '<div class="action">';
-                    $result .= "<a href=\"javascript:alert_form('{$value['value']}');\" data-toggle=\"tooltip\" data-original-title=\"添加方法\"><i class=\"list-icon fa fa-pencil fa-fw\"></i></a>";
-                    $result .= '</div>';
+                    if(!isset($value['is_base_class']) or $value['is_base_class'] <= 0){
+                        $path = base64_encode($value['value']);
+                        $result .= '<div class="action">';
+                        $result .= "<a href=\"javascript:alert_form('{$path}');\" data-toggle=\"tooltip\" data-original-title=\"添加方法\"><i class=\"list-icon fa fa-pencil fa-fw\"></i></a>";
+                        $result .= '</div>';
+                    }
                     $result .= '<div class="comment" style="display:block"><pre style="border:0px;background-color:unset;">'.$value['comment'].'</pre></div>';
                 }elseif($value['type'] == 'function'){
 

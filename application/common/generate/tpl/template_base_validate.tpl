@@ -14,6 +14,9 @@ namespace {$namespace};
 use {$item};
 {/foreach}
 
+/**
+* [Final] 基类不可以修改
+*/
 class {$class_name} extends {$extends_class}
 {
     //定义验证规则

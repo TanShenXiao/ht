@@ -46,12 +46,13 @@ class ProgramMap
                     --$i;
                 }
                 $dirs[$key]['comment'] = $result['comment'];
+                $dirs[$key]['is_base_class'] = $result['is_base_class'];
+
                 $dirs = array_merge($dirs,$result['function']);
             }
             if(is_dir($value)){
                 $dirs = array_merge($dirs,$this->get_file($value,$i));
             }
-
         }
 
         return $dirs;
@@ -76,8 +77,10 @@ class ProgramMap
         $reflectionClass = new \ReflectionClass($class);
         $data = [];
 
-        $class_data['comment'] =  preg_replace('/(^\/\*{1,})|(\*\/)/i','',trim($reflectionClass->getDocComment()));
+        $class_data['comment'] =  preg_replace('/(^\/\*{1,})|(\*\/)| /i','',trim($reflectionClass->getDocComment()));
         $methods = $reflectionClass->getMethods();
+        //判断它是不是基类
+        $class_data['is_base_class'] = preg_match('/\[Final\]/i', $class_data['comment']);
 
         foreach ($methods as $values){
             if($values->class != $class) continue;
@@ -87,7 +90,7 @@ class ProgramMap
             $data[$key]['pid']      = $pid;
             $data[$key]['value']    = $file;
             $data[$key]['type']     = 'function';
-            $data[$key]['comment']  = preg_replace('/^\/\*{1,}|\*\//i','',trim($values->getDocComment(),"\r\n"));
+            $data[$key]['comment']  = preg_replace('/^\/\*{1,}|\*\/| /i','',trim($values->getDocComment(),"\r\n"));
             $data[$key]['title']     = $values->getName();
             $data[$key]['param'] = [];
             $parameters = (array)$values->getParameters();
@@ -119,15 +122,33 @@ class ProgramMap
         return $class_data;
     }
 
-    public function add_code($path,$function_name,$param = [],$function_content= '')
+    public function add_code($path,$function_name,$param = '',$function_content= '',$function_comment = '')
     {
+        //在备注的换行符前面加*
+        $function_comment = preg_replace("/\n/i","\n\t *",$function_comment);
+
         $content = "
-    function $function_name()
+    /**
+     * {$function_comment}
+     */    
+    function $function_name({$param})
     {
         {$function_content}
     }
 }   
         ";
+        //函数名称判断
+        if(preg_match('/[^A-za-z_]+/i',$function_name)){
+            return '请输入正确的函数名称';
+        }
+
+        //函数参数判断
+        $array = explode(',',$param);
+        foreach ($array as $item){
+            if(preg_match('/^[^\$]/i',$param) and preg_match('/^[^&\$]/i',$param)){
+                return '请输入正确的参数';
+            }
+        }
 
         $namespace = $this->created_namespace(dirname($path));
         $class = $namespace.'\\'.pathinfo($path,PATHINFO_FILENAME);

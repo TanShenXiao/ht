@@ -90,11 +90,6 @@
 <script src="__LIBS__/jquery-ui/jquery-ui.min.js"></script>
 <script>
     $(document).ready(function(){
-        // 模块拖拽
-        $( "#sortable" ).sortable({
-            connectWith: ".connectedSortable"
-        }).disableSelection();
-
         $(".dd3-content").mouseenter(function () {
            $(this).find('.comment').show();
         });
@@ -102,36 +97,6 @@
        $(".dd3-content").mouseout(function () {
            // $(this).find('.comment').hide();
         });
-
-        // 保存节点
-        $('#save').click(function(){
-            Dolphin.loading();
-            $.post("{:url('save')}", {menus: $('#menu_list').nestable('serialize')}, function(data) {
-                Dolphin.loading('hide');
-                if (data.code) {
-                    $('#save').removeClass('btn-success').addClass('btn-default disabled');
-                    Dolphin.notify(data.msg, 'success');
-                } else {
-                    Dolphin.notify(data.msg, 'danger');
-                }
-            });
-        });
-
-        // 初始化节点拖拽
-        $('#menu_list').nestable({maxDepth:4}).on('change', function(){
-            $('#save').removeAttr("disabled").removeClass('btn-default disabled').addClass('btn-success');
-        });
-
-        // 隐藏禁用节点
-        $('#hide_disable').click(function(){
-            $('.dd-disable').hide();
-        });
-
-        // 显示禁用节点
-        $('#show_disable').click(function(){
-            $('.dd-disable').show();
-        });
-
         // 展开所有节点
         $('#expand-all').click(function(){
             $('#menu_list').nestable('expandAll');
@@ -141,82 +106,54 @@
         $('#collapse-all').click(function(){
             $('#menu_list').nestable('collapseAll');
         });
-
-        // 禁用节点
-        $('.dd3-content').delegate('.disable', 'click', function(){
-            var self     = $(this);
-            var ids      = self.data('ids');
-            var ajax_url = '{:url("disable", ["table" => "admin_menu"])}';
-            Dolphin.loading();
-            $.post(ajax_url, {ids:ids}, function(data) {
-                Dolphin.loading('hide');
-                if (data.code) {
-                    self.attr('data-original-title', '启用').removeClass('disable').addClass('enable')
-                        .children().removeClass('fa-ban').addClass('fa-check-circle-o')
-                        .closest('.dd-item')
-                        .addClass('dd-disable');
-                } else {
-                    Dolphin.notify(data.msg, 'danger');
-                }
-            });
-            return false;
-        });
-
-        // 启用节点
-        $('.dd3-content').delegate('.enable', 'click', function(){
-            var self     = $(this);
-            var ids      = self.data('ids');
-            var ajax_url = '{:url("enable", ["table" => "admin_menu"])}';
-            Dolphin.loading();
-            $.post(ajax_url, {ids:ids}, function(data) {
-                Dolphin.loading('hide');
-                if (data.code) {
-                    self.attr('data-original-title', '禁用').removeClass('enable').addClass('disable')
-                        .children().removeClass('fa-check-circle-o').addClass('fa-ban')
-                        .closest('.dd-item')
-                        .removeClass('dd-disable');
-                } else {
-                    Dolphin.notify(data.msg, 'danger');
-                }
-            });
-            return false;
-        });
+        $('#menu_list').nestable('collapseAll');
+        $('#menu_list').nestable('collapseAll');
     });
-    function alert_form()
+    function alert_form(path)
     {
         //自定页
         layer.open({
             type: 1,
+            title:'添加函数',
             skin: 'layui-layer-demo', //样式类名
-            closeBtn: 0, //不显示关闭按钮
+            closeBtn: 1, //不显示关闭按钮
             anim: 2,
+            area: ['800px', '700px'],
             shadeClose: true, //开启遮罩关闭
-            content: '<div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12 " id="form_group_mobile">\n' +
+            content: '<form action="{:url('add')}" name="form-builder" style="margin-top:20px;"><div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12 " id="form_group_mobile">\n' +
                 '    <label class="col-xs-12" for="mobile">函数名称</label>\n' +
                 '    <div class="col-xs-12">\n' +
                 '        \n' +
-                '        <input class="form-control" type="text" id="mobile" name="mobile" value="18323477096" placeholder="请输入手机号">\n' +
+                '        <input class="form-control" type="text" id="function_name" name="function_name" value="" placeholder="请输入函数名">\n' +
+                '        <input class="form-control" type="hidden" id="function_path" name="function_path" value="'+path+'">\n' +
                 '\n' +
                 '            </div></div>\n' +
                 '<div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12 " id="form_group_mobile">\n' +
                 '    <label class="col-xs-12" for="mobile">参数</label>\n' +
                 '    <div class="col-xs-12">\n' +
                 '        \n' +
-                '        <input class="form-control" type="text" id="mobile" name="mobile" value="18323477096" placeholder="请输入手机号">\n' +
+                '        <input class="form-control" type="text" id="function_param" name="function_param" value="" placeholder="请输入参数">\n' +
                 '\n' +
                 '            </div></div>\n' +
+                '<div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12 " id="form_group_value">'+
+                '<label class="col-xs-12" for="value">内容</label>'+
+                '<div class="col-xs-12">'+
+                '<textarea class="form-control" id="function_content" rows="7" name="function_content" placeholder="请输入函数内容"></textarea>'+
+                '</div>'+
+                '</div>'+
+                '<div class="form-group col-lg-12 col-md-12 col-sm-12 col-xs-12 " id="form_group_value">'+
+                '<label class="col-xs-12" for="value">备注</label>'+
+                '<div class="col-xs-12">'+
+                '<textarea class="form-control" id="function_comment" rows="7" name="function_comment" placeholder="请输入函数备注"></textarea>'+
+                '</div>'+
+                '</div>'+
                 '<div class="form-group col-md-12 col-xs-12">\n' +
                 ' <div class="col-xs-12">\n' +
                 '<button class="btn btn-minw btn-primary ajax-post" target-form="form-builder" type="submit">\n' +
                 '提交</button>\n' +
-                '<button class="btn btn-default" type="button" onclick="javascript:history.back(-1);return false;">\n' +
-                '返回</button>\n' +
-                '\n' +
-                '\n' +
                 '</div>\n' +
-                '</div>'
+                '</div></form>'
         });
     }
-
 </script>
 {/block}

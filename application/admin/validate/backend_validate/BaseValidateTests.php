@@ -3,7 +3,7 @@
 // | 代码生成器 php  生成的摸版文件这个摸版文件可以进行修改 如果此文件存在自动生成器将
 // | 不会生成该文件。
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-10 18:42:43
+// | 最新更新时间: 2019-07-12 18:02:43
 // +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
@@ -12,6 +12,9 @@ namespace app\admin\validate\backend_validate;
 
 use think\Validate;
 
+/**
+* [Final] 基类不可以修改
+*/
 class BaseValidateTests extends Validate{
     //定义验证规则
     protected $rule = [
@@ -23,6 +26,8 @@ class BaseValidateTests extends Validate{
            'test_status|表1' => 'require',
         
            'test2_name|表2' => 'require',
+        
+           'test2_city|表2地区' => 'require',
         
            'test3_name|表3' => 'require',
         
