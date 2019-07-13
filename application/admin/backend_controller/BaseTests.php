@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-12 18:02:43// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-13 19:04:04// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
@@ -24,9 +24,6 @@ class BaseTests extends Admin
      //数据表信息
      protected $tables;
     
-     //表1关联数据
-     protected $test_status;
-    
      /**
      * 构造方法
      * @access public
@@ -37,8 +34,6 @@ class BaseTests extends Admin
 
         
         $this->tables = ['test' => ['table' => 'test','pk' => 'id'],'test2' => ['table' => 'test2','pk' => 'id'],'test3' => ['table' => 'test3','pk' => 'id']];
-        
-        $this->test_status = Db::name('test2')->column('name','id');
         
     }
 
@@ -55,7 +50,7 @@ class BaseTests extends Admin
         $data_list = Db::name('test test')
 			->join('test2 test2','test.id = test2.pid','inner')
 			->join('test3 test3','test.id = test3.tid','inner')
-			->field('test.id as id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test2.city as test2_city,test3.name as test3_name')
+			->field('test.id as id,test.name as test_name,test.created_time as test_created_time,test2.name as test2_name,test3.name as test3_name')
 			->where($map)->order($order)->paginate();
 
         //分页数据
@@ -74,9 +69,7 @@ class BaseTests extends Admin
             
             ->addColumn('test_name','表1','text','')            
             ->addColumn('test_created_time','表1','text','')            
-            ->addColumn('test_status','表1','text','')            
             ->addColumn('test2_name','表2','text','')            
-            ->addColumn('test2_city','表2地区','text','')            
             ->addColumn('test3_name','表3','text','')            
             ->addColumn('right_button', '操作', 'btn')            
             ->addTopButton('add')            
@@ -102,9 +95,7 @@ class BaseTests extends Admin
             //显示字段
             ->addText('test_name','表1','提示信息','','','','')
             ->addDatetime('test_created_time','表1','时间','','','')
-            ->addSelect('test_status','表1','时间',$this->test_status,'','','')
             ->addText('test2_name','表2','提示信息','','','','')
-            ->addLinkages('test2_city','表2地区','提示信息','origin','3','','')
             ->addText('test3_name','表3','提示信息','','','','');
             
         if($this->request->isPost()){
@@ -167,7 +158,7 @@ class BaseTests extends Admin
         $data = Db::name('test test')
 			->join('test2 test2','test.id = test2.pid','inner')
 			->join('test3 test3','test.id = test3.tid','inner')
-			->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test2.city as test2_city,test3.name as test3_name')
+			->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test2.name as test2_name,test3.name as test3_name')
 			->where(['test.id' => $id])->find();
 
         if(!$data){
@@ -181,9 +172,7 @@ class BaseTests extends Admin
             ->addHidden('test3_id','')
             ->addText('test_name','表1','提示信息','','','','')
             ->addDatetime('test_created_time','表1','时间','','','')
-            ->addSelect('test_status','表1','时间',$this->test_status,'','','')
             ->addText('test2_name','表2','提示信息','','','','')
-            ->addLinkages('test2_city','表2地区','提示信息','origin','3','','')
             ->addText('test3_name','表3','提示信息','','','','');
             
         $from->setFormData($data);

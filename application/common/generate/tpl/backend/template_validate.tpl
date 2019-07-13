@@ -1,17 +1,20 @@
-<?php
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础消校验器摸版文件 注意该文件不可以修改，他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-13 19:04:04
+// | 最新更新时间: {$change_date}
+
 // +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace app\admin\validate\backend;
+namespace {$namespace};
 
-use app\admin\validate\backend_validate\BaseValidateTests;
+{volist name='use' id='item'}
+use {$item};
+{/volist}
 
-class ValidateTests extends BaseValidateTests
+class {$class_name} extends {$extends_class}
+
 {
 
 }

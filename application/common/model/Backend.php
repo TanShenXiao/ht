@@ -19,31 +19,31 @@ use think\Validate;
  * Class Generate
  * @package app\common\model
  */
-class Generate
+class Backend extends BaseGenerate
 {
     /**
      * 基础控制器摸版的路径
      * @var string
      */
-    protected $templete_base_controller_file = APP_PATH.'/common/generate/tpl/templete_base_controller.tpl';
+    protected $template_base_controller_file = APP_PATH.'/common/generate/tpl/backend/template_base_controller.tpl';
 
     /**
      * 控制器摸版
      * @var string
      */
-    protected $template_controller_file =  APP_PATH.'/common/generate/tpl/template_controller.tpl';
+    protected $template_controller_file =  APP_PATH.'/common/generate/tpl/backend/template_controller.tpl';
 
     /**
      * 基礎验证器配置路径
      * @var string
      */
-    protected $template_base_validate_file =  APP_PATH.'/common/generate/tpl/template_base_validate.tpl';
+    protected $template_base_validate_file =  APP_PATH.'/common/generate/tpl/backend/template_base_validate.tpl';
 
     /**
      * 验证器配置路径
      * @var string
      */
-    protected $template_validate_file =  APP_PATH.'/common/generate/tpl/template_validate.tpl';
+    protected $template_validate_file =  APP_PATH.'/common/generate/tpl/backend/template_validate.tpl';
 
     /**
      * 基础控制器后台存放路径
@@ -92,43 +92,6 @@ class Generate
      * @var
      */
     protected $validate_path_api;
-
-    /**
-     * 生成器通用配置
-     * @var array
-     */
-    protected $config = [];
-
-    /**
-     * 错误提示
-     * @var string
-     */
-    public $error_msg = '';
-
-    /**
-     * 视图类
-     * @var View
-     */
-    protected $View;
-
-    /**
-     * 当前时间
-     * Generate constructor.
-     * @param array $data
-     */
-    protected $date = '';
-
-    /**
-     * 表信息
-     * @var array
-     */
-    protected $tables = [];
-
-    /**
-     * 主表信息
-     * @var array
-     */
-    protected $master_tables = [];
 
     /**
      * 获取字段属性和字段应有的值
@@ -190,8 +153,9 @@ class Generate
      */
     public function __construct($data = [])
     {
+        parent::__construct();
         //数据填充
-        if($this->is_existence($data,'template_base_controller_file'))  $this->templete_base_controller_file = $data['template_base_controller_file'];    //基础控制器摸版的路径
+        if($this->is_existence($data,'template_base_controller_file'))  $this->template_base_controller_file = $data['template_base_controller_file'];    //基础控制器摸版的路径
         if($this->is_existence($data,'template_controller_file'))       $this->template_controller_file      = $data['template_controller_file'];         //控制器摸版
         if($this->is_existence($data,'template_base_validate_file'))    $this->template_base_validate_file   = $data['template_base_validate_file'];      //基礎验证器配置路径
         if($this->is_existence($data,'template_validate_file'))         $this->template_validate_file        = $data['template_validate_file'];           //验证器配置路径
@@ -203,9 +167,6 @@ class Generate
         if($this->is_existence($data,'validate_path_api'))              $this->validate_path_api             = $data['validate_path_api'];                //校验器 api 存放路径
         if($this->is_existence($data,'config'))                         $this->config = $data['config'];
 
-        $this->View = (new View())->engine();
-
-        $this->date = date('Y-m-d H:i:s');
 
         //获取表信息
         $this->tables = $this->get_table();
@@ -258,8 +219,7 @@ class Generate
         {
             $this->error_msg = $validate->getError();return;
         }
-
-        if(!is_file($this->templete_base_controller_file)){
+        if(!is_file($this->template_base_controller_file)){
             $this->error_msg = '找不到基础摸版控制文件';return;
         }
         if(!is_file($this->template_controller_file)){
@@ -273,20 +233,15 @@ class Generate
         }
     }
 
+    /**
+     * 创建后台管理
+     * @return string
+     */
     public function create()
     {
         //检测是否通过数据校验
         if($this->error_msg) return $this->error_msg;
-
-         $config = $this->config;
-         $this->build_admin($config);  //生成后台
-         //$this->build_api([]);
-
-        echo 'ok';
-    }
-
-    protected function build_admin($config)
-    {
+        $config = $this->config;
         //生成基础验证器
         $base_validate = $this->diy_validate($config);
         $this->created_file($this->template_base_validate_file,$this->base_validate_path_admin,$base_validate);
@@ -308,12 +263,12 @@ class Generate
         //生成基础后台控制器
         $base_admin = $this->diy_controller($config);
         $base_admin['namespace'] = $this->created_namespace($this->base_controller_path_admin);
-        $this->created_file($this->templete_base_controller_file,$this->base_controller_path_admin,$base_admin);
+        $this->created_file($this->template_base_controller_file,$this->base_controller_path_admin,$base_admin);
 
         //生成后台控制器
         $admin = [
             'use' => [
-                 $base_admin['namespace'].'\\'.$base_admin['class_name'],
+                $base_admin['namespace'].'\\'.$base_admin['class_name'],
             ],
             'class_name' => $config['class_name'],
             'extends_class' => $base_admin['class_name'],
@@ -445,64 +400,6 @@ class Generate
         $base_admin['public_variable'] = $this->public_variable;  //加载共用变量
 
         return $base_admin;
-    }
-
-    /**
-     * table头部封装
-     * @param $table
-     * @return string
-     */
-    public function analysis_table($table)
-    {
-        $str = "Db::name('";
-        $i = 0;
-        foreach($table as $key => $value){
-            $i++;
-            if($i == 1){
-                if(empty($value)){
-                    $value = $key;
-                }
-                $str .= $key." {$value}')";
-                continue;
-            }
-            $str .="\r\n\t\t\t->join('{$key} {$value[0]}','{$value[1][0]}','{$value[1][1]}')";
-        }
-
-        return $str;
-    }
-
-    /**
-     * @param $field
-     * @param $is_show
-     * @param bool $is_show_primary_key  是否查询每张表的主键
-     * @return string
-     */
-    public function analysis_field($field,$is_show,$is_show_primary_key = false)
-    {
-        $main_alisa = $this->master_tables[0];
-        $str = "{$main_alisa}.id as id,";  //将主表的id添加到字段中
-
-        //添加除主表以外的其他主键
-        if($is_show_primary_key){
-            $tables = $this->tables;
-            if(!empty($tables)){
-                foreach ($tables as $key => $item){
-                    $str .=$key.'.'.$item['pk'].' as '.$key.'_'.$item['pk'].',';
-                }
-            }
-        }
-
-        foreach($field as $key => $value){
-            if(!isset($value[$is_show]) or !$value[$is_show]){
-                continue;
-            }
-            $value['field'] = $this->decompose($value['field']);
-            $str .= "{$value['alias']}.{$value['field']} as {$value['alias']}_{$value['field']},";
-        }
-
-        $str = trim($str,',');
-
-        return $str;
     }
 
     /**
@@ -671,76 +568,6 @@ class Generate
     }
 
     /**
-     *为分解的参数加单引号
-     * @param $str
-     * @return mixed
-     */
-    public function preg_Separate($str)
-    {
-        $str = preg_replace('/,/i',"','",$str);
-        $str = "'".$str."'";
-        return $str;
-    }
-
-    /**
-     * 获取路径对应的命名空间
-     * @param $path
-     * @return mixed|string
-     */
-    public function created_namespace($path)
-    {
-        $namespace = str_replace(dirname(APP_PATH),'',$path);
-        $namespace = str_replace('application','app',$namespace);
-        $namespace = trim(str_replace('/','\\',$namespace),'\\');
-
-        return $namespace;
-    }
-
-    /**
-     * 根据路经生成php位置
-     * @param $path
-     * @param $class_name
-     * @param string $prefix
-     * @return string
-     */
-    public function get_created_path($path,$class_name,$prefix = '')
-    {
-       return preg_replace('/(\/|\\\)$/i','',$path).'/'.$prefix.$class_name.'.php';
-    }
-
-    /**
-     * 生成目标文件
-     * @param $file
-     * @param $target
-     * @param array $var
-     * @return bool|int
-     * @throws \Exception
-     */
-    protected function created_file($file,$target,&$var = [])
-    {
-        if(!isset($var['namespace'])){
-            $var['namespace'] = $this->created_namespace($target);
-        }
-        $content = $this->View->fetch($file,$var);
-        $content = "<?php\n".$content;
-        if(!is_dir($target)){  //如果文件不存在新建
-            mkdir($target);
-        }
-        return file_put_contents($this->get_created_path($target,$var['class_name']),$content);
-    }
-
-    /**
-     * 分解数组取
-     * @param $field
-     * @return array
-     */
-    public function decompose($field)
-    {
-        $array = explode('.',$field);
-        return array_pop($array);
-    }
-
-    /**
      * 数据简单校验
      * @param $data
      * @param string $field
@@ -751,128 +578,6 @@ class Generate
         return isset($data[$field]) and $data[$field];
 
     }
-
-    /**
-     * 获取表信息 第一个是别名 第二个是表名
-     * is_master 是否获取主表 true是 false不是
-     * @return array
-     */
-    protected function get_table($is_master = false)
-    {
-        $table = [];
-        foreach ($this->config['table'] as $key => $item){
-            if(is_array($item)){
-                $alias = $item[0];
-            }elseif(!$item){
-                $alias = $key;
-            }else{
-                $alias = $item;
-            }
-
-            $pk = Db::name("{$key}")->getPk();  //获取表的主键
-            if(!$pk){
-                $pk = 'id'; //当主键不存在的时候用id作为主键
-            }elseif (is_array($pk)){
-                $pk = $pk[0];
-            }
-
-            if($is_master){
-                return [$alias,['table' => $key,'pk' => $pk]];
-            }
-
-            $table[$alias] = ['table' => $key,'pk' => $pk];
-        }
-
-        return $table;
-    }
-
-    /**
-     * 把数组变成数组字符串
-     * @param $array
-     * @return string
-     */
-    public function array_to_string($array)
-    {
-        $str = '[';
-        if(!is_array($array)) return '';
-        foreach ($array as $key => $value){
-            if(is_array($value)){
-                $val = $this->array_to_string($value);
-                if(!preg_match('/^\[.*\]$/i',$val)){
-                    $val = "'".$val."'";
-                }
-            }else{
-                if(is_null($value)){
-                    $val = "null";
-                }elseif (is_bool($value)){
-                    if($value){
-                        $val = "true";
-                    }else{
-                        $val = "false";
-                    }
-                }else{
-                    $val = "'".$value."'";
-                }
-            }
-            $str .= "'{$key}' => {$val},";
-        }
-
-        $str  = trim($str,',');
-        $str .=']';
-
-        return $str;
-    }
-
-    /**
-     * 获取多选的关联 查询
-     * @param $str
-     * @return bool|string
-     */
-    public function Relation_filed($str)
-    {
-        $data = explode('->',$str);
-        if(!isset($data[1]) or !isset($data[2]) or !$data[0] or !$data[1] or !$data[2]){
-            return false;
-        }
-
-        return "Db::name('{$data[0]}')->column('{$data[1]}','{$data[2]}')";
-    }
-
-    /**
-     * 构建关系表之间的字段关系
-     * @return array
-     */
-    public function Relationship()
-    {
-        $add_Relationship = [];
-        //条件分析
-        $tables = $this->config['table'];
-         array_shift($tables);
-        foreach ($tables as $keys => $item)
-        {
-            if(!isset($item[1][0])) continue;
-            //关系分析
-            $on = preg_replace('/(or|and){1}.*$/i','',$item[1][0]);
-            $on = explode('=',$on);
-            if(!isset($on['0']) or !isset($on[1])){
-                continue;
-            }
-            $on[0] = explode('.',trim($on[0]));
-            $on[1] = explode('.',trim($on[1]));
-            //查看他们之间的关系那个是主键 在条件里面必须要一个主键 一个非主键
-            foreach ($on as $key => $item){
-                $pkey = $key == 1? 0:1;
-                if($this->tables[$item[0]]['pk'] == $item[1] or $this->tables[$on[$pkey][0]]['pk'] != $on[$pkey][1]) continue;
-                $add_Relationship[$keys]['Db'] = "Db::name('{$this->tables[$item[0]]['table']}')->where(['{$this->tables[$item[0]]['pk']}' => \${$item[0]}_last_id])->update(['{$item[1]}' => \${$on[$pkey][0]}_last_id])";
-                $add_Relationship[$keys]['variable'] = ["\${$item[0]}_last_id","\${$on[$pkey][0]}_last_id"];
-                break;
-            }
-        }
-
-        return $add_Relationship;
-    }
-
-
 
     /**
      * 创建后台菜单

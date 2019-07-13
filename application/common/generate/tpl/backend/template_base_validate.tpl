@@ -1,41 +1,48 @@
-<?php
 // +----------------------------------------------------------------------
 // | 代码生成器 php  生成的摸版文件这个摸版文件可以进行修改 如果此文件存在自动生成器将
 // | 不会生成该文件。
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-13 19:04:04
+// | 最新更新时间: {$change_date}
+
 // +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace app\admin\validate\backend_validate;
+namespace {$namespace};
 
-use think\Validate;
+{foreach $use as $item }
+use {$item};
+{/foreach}
 
 /**
 * [Final] 基类不可以修改
 */
-class BaseValidateTests extends Validate{
+class {$class_name} extends {$extends_class}
+{
     //定义验证规则
     protected $rule = [
-        
-           'test_name|表1' => 'require',
-        
-           'test_created_time|表1' => 'require',
-        
-           'test2_name|表2' => 'require',
-        
-           'test3_name|表3' => 'require',
-        
+        {foreach $rule as $key => $item }
+
+           '{$key}' => '{$item}',
+        {/foreach}
+
     ];
 
     //定义场景消息
     protected $message  =   [
-         
+         {foreach $message as $key => $item }
+
+            '{$key}' => '{$item}',
+         {/foreach}
+
     ];
 
     //验证场景
     protected $scene = [
-        
+        {foreach $scene as $key => $item }
+
+            '{$key}' => '{$item}',
+        {/foreach}
+
     ];
 }

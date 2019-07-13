@@ -9,16 +9,18 @@
 
 namespace app\admin\controller;
 use app\common\builder\ZBuilder;
+use app\common\controller\Common;
+use app\common\model\Api;
+use app\common\model\Backend;
 use think\App;
 use think\Controller;
-use app\common\model\Generate;
 use think\Db;
 
 /**
  * 后台公共控制器
  * @package app\admin\controller
  */
-class Test extends Controller
+class Test extends Common
 {
 
     public function __construct(App $app = null)
@@ -68,7 +70,7 @@ class Test extends Controller
                'form_data' => ['type' => 'Datetime','tips' => '时间',],
                'is_validate' => 1,
                'validate_data' => ['require'],
-           ],
+           ]/*,
                [
                'field' => 'status',
                'table' => 'test',
@@ -83,7 +85,7 @@ class Test extends Controller
                'form_data' => ['type' => 'Select','tips' => '时间','options' => 'test2->name->id'],
                'is_validate' => 1,
                'validate_data' => ['require'],
-           ]
+           ]*/
                ,[
                    'field' => 'name',
                    'table' => 'test2',
@@ -96,20 +98,6 @@ class Test extends Controller
                    'is_add' => 1,
                    'is_edit' => 1,
                    'form_data' => ['type' => 'text','tips' => '提示信息'],
-                   'is_validate' => 1,
-                   'validate_data' => ['require'],
-               ],[
-                   'field' => 'city',
-                   'table' => 'test2',
-                   'alias' => 'test2',
-                   'name' => '表2地区',
-                   'is_search' => 0,
-                   'search_data' => ['text','like','',[]],
-                   'is_list' => 1,
-                   'list_data' => ['text',''],
-                   'is_add' => 1,
-                   'is_edit' => 1,
-                   'form_data' => ['type' => 'Linkages','tips' => '提示信息','table' => 'origin','level' => 3],
                    'is_validate' => 1,
                    'validate_data' => ['require'],
                ],
@@ -132,7 +120,7 @@ class Test extends Controller
        ];
 
        $data['config'] = $config;
-       $Generate = new Generate($data);
+       $Generate = new Backend($data);
        t($Generate->create());
 
        //t($this->fetch());
@@ -143,11 +131,134 @@ class Test extends Controller
 
     public function test2()
     {
+        $config = [
+            'module'     => 'admin',
+            'class_name' => 'Tests',
+            'name'       => 'zzz',
+            'temp_type'  => 'select',
+            'comment'    => '好东西
+            zknbzkl
+            nzblkcxz
+            nzlbkxc',
+            'table' => ['test' => 'test','test2' => ['test2',['test.id = test2.pid','inner']],'test3' => ['test3',['test.id = test3.tid','inner']]],
+            'field' =>[
+                [
+                    'field' => 'name',
+                    'table' => 'test',
+                    'alias' => 'test',
+                    'name' => '表1',
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'is_add' => 1,
+                    'is_edit' => 1,
+                    'form_data' => ['type' => 'text','tips' => '提示信息',],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ]
+                ,
+                [
+                    'field' => 'created_time',
+                    'table' => 'test',
+                    'alias' => 'test',
+                    'name' => '表1',
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'is_add' => 1,
+                    'is_edit' => 1,
+                    'form_data' => ['type' => 'Datetime','tips' => '时间',],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ],
+                [
+                    'field' => 'status',
+                    'table' => 'test',
+                    'alias' => 'test',
+                    'name' => '表1',
+                    'is_search' => 0,
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'is_add' => 1,
+                    'is_edit' => 1,
+                    'form_data' => ['type' => 'Select','tips' => '时间','options' => 'test2->name->id'],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ]
+                ,[
+                    'field' => 'name',
+                    'table' => 'test2',
+                    'alias' => 'test2',
+                    'name' => '表2',
+                    'list_data' => ['text',''],
+                    'form_data' => ['type' => 'text','tips' => '提示信息'],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ],[
+                    'field' => 'city',
+                    'table' => 'test2',
+                    'alias' => 'test2',
+                    'name' => '表2地区',
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'form_data' => ['type' => 'Linkages','tips' => '提示信息','table' => 'origin','level' => 3],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ],
+                [
+                    'field' => 'name',
+                    'table' => 'test3',
+                    'alias' => 'test3',
+                    'name' => '表3',
+                    'is_list' => 1,
+                    'list_data' => ['text',''],
+                    'form_data' => ['type' => 'text','tips' => '提示信息',],
+                    'is_validate' => 1,
+                    'validate_data' => ['require'],
+                ]
+            ],
+        ];
 
+        $data['config'] = $config;
+        $Generate = new Api($data);
+        t($Generate->create());
 
 
     }
 
+    /**
+     * 好东西
+     *zknbzkl
+     *nzblkcxz
+     *nzlbkxc
+     * @access public
+     * @return array
+     */
+    public function zzz()
+    {
+        $is_remarks = input('is_remarks');
+        //获取筛选
+        $map = $this->getMap();
+        $order = $this->getOrder();
+
+        $data_list = Db::name('test test')
+            ->join('test2 test2','test.id = test2.pid','inner')
+            ->join('test3 test3','test.id = test3.tid','inner')
+            ->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test2.city as test2_city,test3.name as test3_name')
+            ->where($map)->order($order)->paginate()->toArray();
+
+        if($is_remarks){
+            $data_list['field_remarks'] = [
+                //显示字段
+
+                'test_name' => '表1',
+                'test_created_time' => '表1',
+                'test_status' => '表1',
+                'test2_name' => '表2',
+                'test2_city' => '表2地区',
+                'test3_name' => '表3',                    ];
+        }
+        t($data_list);
+        $this->success('获取成功','',$data_list);
+    }
     /**
      * 获取路径对应的命名空间
      * @param $path
