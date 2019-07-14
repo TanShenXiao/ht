@@ -280,37 +280,7 @@ class Backend extends BaseGenerate
         //自动创建菜单
         $this->created_menu($config['class_name']);
     }
-
-    protected function build_api($config)
-    {
-        //生成基础后台控制器
-        $base_admin = [
-            'use' => [
-                'think\Controller'
-            ],
-            'class_name' => 'BaseTsx',
-            'extends_class' => 'Controller',
-            'index_content' => "echo 'name';",
-            'add_content' => "echo 'name';",
-            'edit_content' => "echo 'name';",
-            'delete_content' => "echo 'name';",
-            'change_date' => $this->date,
-        ];
-        $this->created_file($this->templete_base_controller_file,$this->base_controller_path_api,$base_admin);
-
-        //生成前台控制器
-        $admin = [
-            'use' => [
-                $base_admin['namespace'].'\\'.$base_admin['class_name'],
-            ],
-            'class_name' => 'Tsx',
-            'extends_class' => $base_admin['class_name'],
-            'change_date' => $this->date,
-
-        ];
-        $this->created_file($this->template_controller_file,$this->controller_path_api,$admin);
-    }
-
+    
     /**
      * 验证数据组装
      * @param $config

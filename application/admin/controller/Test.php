@@ -132,10 +132,10 @@ class Test extends Common
     public function test2()
     {
         $config = [
-            'module'     => 'admin',
+            'module'     => 'test',
             'class_name' => 'Tests',
-            'name'       => 'zzz',
-            'temp_type'  => 'select',
+            'name'       => 'index',
+            'temp_type'  => 'delete',
             'comment'    => '好东西
             zknbzkl
             nzblkcxz

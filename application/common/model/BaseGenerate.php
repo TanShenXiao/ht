@@ -145,7 +145,7 @@ class BaseGenerate
         $content = $this->View->fetch($file,$var);
         $content = "<?php\n".$content;
         if(!is_dir($target)){  //如果文件不存在新建
-            mkdir($target);
+            mkdir($target,0777,true);
         }
         return file_put_contents($this->get_created_path($target,$var['class_name']),$content);
     }
@@ -195,6 +195,25 @@ class BaseGenerate
         return $table;
     }
 
+    /**
+     * 验证封装
+     * @param $field
+     * @return array
+     */
+    public function analysis_validate($field)
+    {
+        $data = [];
+        foreach ($field as $item){
+            if(!$item['is_validate']) continue;
+            if(!$item['validate_data']){
+                $item['validate_data'] = 'require';
+            }
+            $field = $this->decompose($item['field']);
+            $data[ "{$item['alias']}_{$field}".'|'.$item['name']] = implode('|',$item['validate_data']);
+        }
+
+        return $data;
+    }
     /**
      * @param $field
      * @param $is_show

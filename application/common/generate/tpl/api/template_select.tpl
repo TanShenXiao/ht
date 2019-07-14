@@ -23,5 +23,5 @@ public function {$name}()
         ];
     }
 
-    $this->success('获取成功','',$data_list);
+    return $this->result($data_list,200,'获取成功','json');
 }

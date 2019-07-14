@@ -86,7 +86,7 @@ class Config
             // 插件静态资源目录
             config('template.tpl_replace_string.__PLUGINS__', '/plugins');
         } else {
-            if ($module == 'admin') {
+            if ($module == 'admin' and (!defined('IS_API') or IS_API !== true)) {
                 header("Location: ".$base_dir.ADMIN_FILE.'/admin', true, 302);exit();
             }
 
@@ -94,6 +94,9 @@ class Config
                 // 修改默认访问控制器层
                 config('url_controller_layer', 'home');
             }
+        }
+        if(defined('IS_API') and IS_API === true){
+            config('url_controller_layer', 'api');
         }
 
         // 定义模块资源目录

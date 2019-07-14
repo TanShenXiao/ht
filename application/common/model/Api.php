@@ -98,7 +98,7 @@ class Api extends BaseGenerate
      */
     public function validate()
     {
-        $temp_type_in = implode(',',$this->template_function);
+        $temp_type_in = implode(',',array_keys($this->template_function));
         $validate = new Validate([
             'module|模块'             => 'require',
             'temp_type|接口类型'      => "require|in:{$temp_type_in}",
@@ -119,11 +119,14 @@ class Api extends BaseGenerate
     }
 
     /**
-     * 创建后台管理
+     * 接口创建
      * @return string
      */
     public function create()
     {
+        //检测是否通过数据校验
+        if($this->error_msg) return $this->error_msg;
+
         $data = [];
         $data['comment'] = $this->Format_remarks($this->config['comment']);
         $data['name'] = $this->config['name'];
@@ -141,8 +144,8 @@ class Api extends BaseGenerate
         $base_class = $this->created_namespace($base_path);
         if(!class_exists($base_class)){
 
-                $data['use'] = ['app\admin\controller\Admin'];
-                $data['extends_class'] = 'Admin';
+                $data['use'] = ['app\common\controller\Api','think\Validate'];
+                $data['extends_class'] = 'Api';
                 $data['class_name'] = $base_class_name;
 
             $this->created_file($this->template_base_controller_file,$this->base_controller_path_api,$data);
@@ -155,26 +158,7 @@ class Api extends BaseGenerate
 
         if($reflection->hasMethod($data['name'])){
 
-            //找出存在的函数
-            $str =  $reflection->getMethod('zzz');
-            $arr = explode('Method',$str,2);
-            if($arr[0]){
-                $str_len = count(explode("\n",trim($arr[0],"\n")));
-            }else{
-                $str_len = 0;
-            }
-            preg_match('/\d+ - \d+/i',$arr[1],$param);
-            $param = array_map('trim',explode("-",$param[0]));
-            $param[0] = $param[0] - $str_len - 1;
-            $param[1] = $param[1] -1;
-
-            $files = file($base_file);
-            //替换文本中的内容
-            $y_content = '';
-            for($i=$param[0];$i <= $param[1];$i++ ){
-                $y_content .= $files[$i];
-            }
-            $y_content = trim($y_content,"\n");
+            $y_content = $this->get_method_content($base_file,$base_class,$data['name']);
             $Original_content  = str_replace($y_content,$content,$Original_content);
             file_put_contents($base_file,$Original_content);
         }else{
@@ -183,9 +167,20 @@ class Api extends BaseGenerate
 
             file_put_contents($base_file,$Original_content);
         }
-       echo 'ok';
 
-
+        //前段控制器校验
+        //当在没有继承基础类的
+        $class_name = $this->config['class_name'];
+        $path = $this->controller_path_api.'/'.$class_name;
+        $class = $this->created_namespace($path);
+        if(!class_exists($class)){
+            $data = [];
+            $data['use'] = [$base_class];
+            $data['extends_class'] = $base_class_name;
+            $data['class_name'] = $this->config['class_name'];
+            $this->created_file($this->template_controller_file,$this->controller_path_api,$data);
+        }
+        echo 'ok';
     }
 
     /**
@@ -205,6 +200,88 @@ class Api extends BaseGenerate
     }
 
     /**
+     * 基础添加处理
+     * @param $data
+     * @return string|string[]|null
+     */
+    public function add($data)
+    {
+        $data['rule']           = $this->analysis_validate($this->config['field']);
+        $data['field_remarks']  = $this->get_remarks();
+        $data['relationship']   = $this->Relationship();
+        $data['public_variable']['tables']['describe'] = '表信息';  //加载共用变量
+        $data['public_variable']['tables']['data'] = $this->array_to_string($this->tables);  //加载共用变量
+
+        return $this->parse_content($data);
+    }
+
+    /**
+     * 基础編輯处理
+     * @param $data
+     * @return string|string[]|null
+     */
+    public function edit($data)
+    {
+        $field = $this->analysis_field( $this->config['field'],true,true);
+        $data['rule']           = $this->analysis_validate($this->config['field']);
+        $data['field_remarks']  = $this->get_remarks();
+        $data['relationship']   = $this->Relationship();
+        $data['data_list']      = $this->analysis_table($this->config['table']);
+        $data['data_list']     .= "\r\n\t\t\t->field('{$field}')";
+        $data['public_variable']['tables']['describe'] = '表信息';  //加载共用变量
+        $data['public_variable']['tables']['data'] = $this->array_to_string($this->tables);  //加载共用变量
+        $data['master_table'] = $this->master_tables;
+
+        return $this->parse_content($data);
+    }
+
+    /**
+     * 基础編輯处理
+     * @param $data
+     * @return string|string[]|null
+     */
+    public function delete($data)
+    {
+        $data['table']['table'] = $this->master_tables[0];
+        $data['table']['pk'] = $this->master_tables[1]['pk'];
+
+        return $this->parse_content($data);
+    }
+
+    /**
+     * 提取函数在文件的内容
+     * @param $base_file
+     * @param $class
+     * @param $method
+     * @return string
+     * @throws \ReflectionException
+     */
+    public function get_method_content($base_file,$class,$method)
+    {
+        $reflection = new \ReflectionClass($class);
+        //找出存在的函数
+        $str =  $reflection->getMethod($method);
+        $arr = explode('Method',$str,2);
+        if($arr[0]){
+            $str_len = count(explode("\n",trim($arr[0],"\n")));
+        }else{
+            $str_len = 0;
+        }
+        preg_match('/\d+ - \d+/i',$arr[1],$param);
+        $param = array_map('trim',explode("-",$param[0]));
+        $param[0] = $param[0] - $str_len - 1;
+        $param[1] = $param[1] -1;
+
+        $files = file($base_file);
+        //替换文本中的内容
+        $y_content = '';
+        for($i=$param[0];$i <= $param[1];$i++ ){
+            $y_content .= $files[$i];
+        }
+        return $y_content = trim($y_content,"\n");
+    }
+
+    /**
      * 解析模板内容
      * @param $data
      * @return string|string[]|null
@@ -217,7 +294,7 @@ class Api extends BaseGenerate
         if(!preg_match("/^\n/i",$content)){
             $content = "\n".$content;
         }
-        return $content = preg_replace("/\n/i","\n\t",$content);
+        return $content = trim(preg_replace("/\n/i","\n\t",$content),"\n");
     }
 
     /**
