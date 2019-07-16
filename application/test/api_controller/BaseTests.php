@@ -242,24 +242,35 @@ class BaseTests extends Api
 	* 好东西
 	* zknbzkl
 	* nzblkcxz
-	* nzlbkxc* @access public
+	* nzlbkxc
+	* @access public
 	*/
 	public function index()
 	{
-	    $ids   = $this->request->isPost() ? input('post.ids/a') : input('param.ids');
-	    $ids   = (array)$ids;
-	    if(!$ids) $this->error('失败');
+	    $is_remarks = input('is_remarks');
+	    //获取筛选
+	    $map = $this->getMap();
+	    $order = $this->getOrder();
 	
-	    $table = $this->tables;
-	    $table = array_shift($table);
+	    $data_list = Db::name('test test')
+				->join('test2 test2','test.id = test2.pid','inner')
+				->join('test3 test3','test.id = test3.tid','inner')
+				->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test2.city as test2_city,test3.name as test3_name')
+				->where($map)->order($order)->paginate()->toArray();
 	
-	    if(Db::name('test')->where(['id' => $ids])->delete()){
-	
-	        return $this->result([],200,'获取成功','json');
-	
+	    if($is_remarks){
+	        $data_list['field_remarks'] = [
+	            //显示字段
+	            
+	                'test_name' => '表1',            
+	                'test_created_time' => '表1',            
+	                'test_status' => '表1',            
+	                'test2_name' => '表2',            
+	                'test2_city' => '表2地区',            
+	                'test3_name' => '表3',            
+	        ];
 	    }
 	
-	    return $this->result([],200,'删除失败','json');
-	
+	    return $this->result($data_list,200,'获取成功','json');
 	}
 }

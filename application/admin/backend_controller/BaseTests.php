@@ -2,7 +2,7 @@
 // +----------------------------------------------------------------------
 // | 代码生成器 php 基础摸版文件 注意该文件不可以修改他随时都在发生变化
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-14 08:45:06// +-----------------------------------------------------------------------
+// | 最新更新时间: 2019-07-16 18:18:06// +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
@@ -13,7 +13,6 @@ use app\common\builder\ZBuilder;
 use think\App;
 use app\admin\controller\Admin;
 use app\admin\validate\backend\ValidateTests;
-use think\Validate;
 
 /**
 * [Final] 基类不可以修改
@@ -101,8 +100,7 @@ class BaseTests extends Admin
             
         if($this->request->isPost()){
             $change_data = input();
-            $validate = new Validate();
-            $validate->rule();
+            $validate = new ValidateTests();
             if(!$validate->check($change_data)){
                 $this->error($validate->getError());
             }

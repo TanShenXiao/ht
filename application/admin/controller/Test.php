@@ -135,7 +135,7 @@ class Test extends Common
             'module'     => 'test',
             'class_name' => 'Tests',
             'name'       => 'index',
-            'temp_type'  => 'delete',
+            'temp_type'  => 'select',
             'comment'    => '好东西
             zknbzkl
             nzblkcxz
@@ -224,53 +224,5 @@ class Test extends Common
 
     }
 
-    /**
-     * 好东西
-     *zknbzkl
-     *nzblkcxz
-     *nzlbkxc
-     * @access public
-     * @return array
-     */
-    public function zzz()
-    {
-        $is_remarks = input('is_remarks');
-        //获取筛选
-        $map = $this->getMap();
-        $order = $this->getOrder();
-
-        $data_list = Db::name('test test')
-            ->join('test2 test2','test.id = test2.pid','inner')
-            ->join('test3 test3','test.id = test3.tid','inner')
-            ->field('test.id as id,test.id as test_id,test2.id as test2_id,test3.id as test3_id,test.name as test_name,test.created_time as test_created_time,test.status as test_status,test2.name as test2_name,test2.city as test2_city,test3.name as test3_name')
-            ->where($map)->order($order)->paginate()->toArray();
-
-        if($is_remarks){
-            $data_list['field_remarks'] = [
-                //显示字段
-
-                'test_name' => '表1',
-                'test_created_time' => '表1',
-                'test_status' => '表1',
-                'test2_name' => '表2',
-                'test2_city' => '表2地区',
-                'test3_name' => '表3',                    ];
-        }
-        t($data_list);
-        $this->success('获取成功','',$data_list);
-    }
-    /**
-     * 获取路径对应的命名空间
-     * @param $path
-     * @return mixed|string
-     */
-    public function created_namespace($path)
-    {
-        $namespace = str_replace(dirname(APP_PATH),'',$path);
-        $namespace = str_replace('application','app',$namespace);
-        $namespace = trim(str_replace('/','\\',$namespace),'\\');
-
-        return $namespace;
-    }
 }   
         

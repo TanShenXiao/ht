@@ -457,7 +457,6 @@
 <script src="__LIBS__/js-xss/xss.min.js?v={:config('asset_version')}"></script>
 <script src="__LIBS__/viewer/viewer.min.js?v={:config('asset_version')}"></script>
 {/eq}
-
 <!-- Page JS Plugins -->
 <script src="__LIBS__/layer/layer.js?v={:config('asset_version')}"></script>
 {notempty name="_js_files"}
@@ -469,7 +468,6 @@
         {/volist}
     {/eq}
 {/notempty}
-
 <script>
     jQuery(function () {
         App.initHelpers(['appear', 'slimscroll', 'magnific-popup', 'table-tools']);

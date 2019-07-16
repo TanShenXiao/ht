@@ -12,9 +12,13 @@ namespace app\test\api;
 
 
 use app\test\api_controller\BaseTests;
+use think\Db;
 
 
 class Tests extends BaseTests
 {
-
+        public function test()
+        {
+           echo get_file_path();
+        }
 }
