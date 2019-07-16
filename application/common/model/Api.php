@@ -118,6 +118,26 @@ class Api extends BaseGenerate
         }
     }
 
+    public function get_content()
+    {
+        //检测是否通过数据校验
+        if($this->error_msg) return $this->error_msg;
+
+        $data = [];
+        $data['comment'] = $this->Format_remarks($this->config['comment']);
+        $data['name'] = $this->config['name'];
+        $data['change_date'] = $this->date;
+        $base_name = 'Base';
+
+        if(!method_exists($this,$this->config['temp_type'])){
+            return '未找到实现的方法';
+        }
+        $func = $this->config['temp_type'];
+        $content = $this->$func($data);
+
+        return $content;
+    }
+
     /**
      * 接口创建
      * @return string

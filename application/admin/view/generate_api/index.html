@@ -73,6 +73,9 @@
                     <li>
                         <a href="#tab-6">返回数据</a>
                     </li>
+                    <li>
+                        <a href="#tab-7">方法备注</a>
+                    </li>
                 </ul>
 
                 <div class="tabBox">
@@ -148,8 +151,8 @@
                             <thead>
                             <tr>
                                 <th></th>
+                                <th>字段</th>
                                 <th>字段名</th>
-                                <th>字段备注</th>
                                 <th>是否可以为空</th>
                                 <th>字段显示方式</th>
                                 <th width="400">验证规则</th>
@@ -170,6 +173,10 @@
                         <div class="edit">
                             写入查询出来的结果
                         </div>
+                    </div>
+                    <div class="tabCon" id="tab-7">
+                        <div style="margin-bottom: 20px;">
+                            <textarea class="form-control" id="comment" rows="7" name="comment" placeholder="请输入备注"></textarea></div>
                     </div>
                 </div>
 
@@ -388,7 +395,7 @@
                             '                                    </div>' +
                             '                                </td>' +
                             '                                <td>' + value.COLUMN_NAME + '</td>' +
-                            '                                <td>' +  value.COLUMN_COMMENT + '</td>' +
+                            '                               <td><input class="form-control tabval" name="field_name['+value.FIELD+']" type="text" value="'+value.COLUMN_COMMENT+'"></td>' +
                             '                                <td>' + value.IS_NULLABLE +'</td>' +
                             '                                <td>' +
                             '                                    <select class="js-select2 form-control" name="field_is_show['+value.FIELD+']" data-allow-clear="true" data-placeholder="请选择字段显示方式">' +

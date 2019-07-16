@@ -1,17 +1,20 @@
 <?php
 // +----------------------------------------------------------------------
-// | 代码生成器 php 基础消校验器摸版文件 注意该文件不可以修改，他随时都在发生变化
+// | 代码生成器 php 生成的摸版文件这个摸版文件可以进行修改 如果此文件存在自动生成器将
+// | 不会生成该文件。
 // +----------------------------------------------------------------------
-// | 最新更新时间: 2019-07-16 21:21:51
+// | 最新更新时间: 2019-07-05 17:12:18
 // +-----------------------------------------------------------------------
 // | Author: tanshenxiao
 // +-----------------------------------------------------------------------
 
-namespace app\admin\validate\backend;
+namespace app\admin\api;
 
-use app\admin\validate\backend_validate\BaseValidateTests;
 
-class ValidateTests extends BaseValidateTests
+use app\admin\api_controller\Basetest;
+
+
+class test extends Basetest
 {
 
 }
