@@ -1,0 +1,432 @@
+{extend name="layout" /}
+{block name="content"}
+<!--内容-->
+<form action="{:url('/admin/generate_api/generate')}" name="form-builder">
+    <div class="content" style="padding: 0;">
+        <div class="conMiddle">
+            <div class="row marginBotton20">
+                <div class="col-xs-3">
+                    <select class="js-select2 form-control"  name="module" data-allow-clear="true"
+                            data-placeholder="所属模块">
+                        <option value="admin">admin</option>
+                        <option value="test">test</option>
+                    </select>
+                </div>
+                <div class="col-xs-9 mkBox">
+                    <input class="form-control" type="text"  name="class_name" value="" placeholder="所属控制器">
+                    <span class="label label-primary mkIcon">所属控制器</span>
+                </div>
+            </div>
+            <div class="row marginBotton20">
+                <div class="col-xs-2">
+                    <select class="js-select2 form-control" id="" name="is_method" data-allow-clear="true" data-placeholder="页面选择">
+                        <option value="1">GET</option>
+                        <option value="2">POST</option>
+                    </select>
+                </div>
+                <div class="col-xs-7">
+                    <input id="url" class="form-control" type="text" id="name" name="name" value="" placeholder="所属方法">
+                </div>
+                <div class="col-xs-3">
+                    <div class="saveBtn">
+                        <a class="btn-primary">保存</a>
+                        <i data-type="0" onclick="xlFun(this)" class="glyphicon glyphicon-menu-down xlJt"></i>
+                        <a class="btn-primary saveA">保存并发布</a>
+                    </div>
+                    <button type="button" class="btn btn-info">测试</button>
+                    <button type="button" class="btn btn-warning" onClick="url.select();document.execCommand('Copy')">复制链接</button>
+                </div>
+            </div>
+            <div class="row marginBotton20">
+                <div class="col-xs-2">
+                    <select class="js-select2 form-control" id="template" name="temp_type" data-allow-clear="true" data-placeholder="">
+                        <option value="select">普通查询</option>
+                        <option value="add">普通添加</option>
+                        <option value="edit">普通编辑</option>
+                        <option value="delete">普通删除</option>
+                    </select>
+                </div>
+                <div class="col-xs-7">
+                    <select class="js-select2 form-control" name="tables" data-allow-clear="true" data-placeholder="" multiple="multiple" multiple>
+                        {volist name='tables' id='item'}
+                        <option value="{$item['TABLE_NAME']}">{$item['TABLE_NAME']} {$item['TABLE_COMMENT']}</option>
+                        {/volist}
+                    </select>
+                </div>
+                <div class="col-xs-3">
+                    <label style="margin-top:13px ;" class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  ">
+                        <input type="checkbox" name="checkbox"><span></span> </label>
+                    <span>是否登录？</span>
+                </div>
+            </div>
+            <div class="row marginBotton20">
+                <ul class="nav nav-tabs" data-toggle="tabs" style="padding-left: 18px;">
+                    <li class="active">
+                        <a href="#tab-3">参数</a>
+                    </li>
+                    <li>
+                        <a href="#tab-4">字段</a>
+                    </li>
+                    <li>
+                        <a href="#tab-5">逻辑</a>
+                    </li>
+                    <li>
+                        <a href="#tab-6">返回数据</a>
+                    </li>
+                </ul>
+
+                <div class="tabBox">
+                    <div class="tabCon active" id="tab-3">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover tables" data-toggle="table" data-classes="table table-hover" data-show-columns="true" data-striped="true" data-show-toggle="true" data-search="true" data-show-refresh="true" data-toolbar="#toolbar" data-height="500">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>KEY</th>
+                                <th>VALUE</th>
+                                <th>扩展</th>
+                                <th>字段显示方式</th>
+                                <th width="400">验证规则</th>
+                                <th width="40px"></th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td style="width: 40px;">
+                                    <div class="col-xs-12">
+                                        <label class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  ">
+                                            <input type="checkbox" name="checkbox"><span></span> </label>
+                                    </div>
+                                </td>
+                                <td>
+                                    <input oninput="getIndex(this)" class="form-control tabval" name="" type="text" value="">
+                                </td>
+                                <td>
+                                    <input oninput="getIndex(this)" class="form-control tabval" name="" type="text" value="">
+                                </td>
+                                <td>
+                                    <input oninput="getIndex(this)" class="form-control tabval" name="" type="text">
+                                </td>
+                                <td>
+                                    <select class="js-select2 form-control" name="" data-allow-clear="true" data-placeholder="请选择字段显示方式">
+                                        <option></option>
+                                        <option value="0">不显示</option>
+                                    </select>
+                                </td>
+                                <td class="yzgz">
+                                    <div class="row yzLine">
+                                        <div class="col-xs-5">
+                                            <select class="js-select2 form-control" name="" data-allow-clear="true" data-placeholder="请选择规则">
+                                                <option></option>
+                                                <option value="0">规则1</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-xs-5">
+                                            <input class="form-control tabval" name="" type="text" value="">
+                                        </div>
+                                        <div class="col-xs-2">
+                                            <a class="glyphicon glyphicon-plus" onclick="addGz(this)"></a>
+                                            <a class="glyphicon glyphicon-trash" onclick="delGz(this)"></a>
+                                        </div>
+                                    </div>
+
+
+                                </td>
+                                <td align="center">
+                                    <i onclick="delFun(this)" class="glyphicon glyphicon-trash delBtn"></i>
+                                </td>
+                            </tr>
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tabCon" id="tab-4">
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover tables" data-toggle="table" //启用bootstrap表格 data-classes="table table-hover"
+                            data-show-columns="true" data-striped="true" data-show-toggle="true" data-search="true" data-show-refresh="true"
+                            data-toolbar="#toolbar" data-height="500">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>字段名</th>
+                                <th>字段备注</th>
+                                <th>是否可以为空</th>
+                                <th>字段显示方式</th>
+                                <th width="400">验证规则</th>
+                                <th width="40px"></th>
+                            </tr>
+                            </thead>
+                            <tbody id="filed-tab-4">
+                            </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="tabCon" id="tab-5">
+                        <div style="margin-bottom: 20px;"><textarea class="form-control" id="summary" rows="7" name="summary"
+                                                                    placeholder="请输入查询SQL"></textarea></div>
+
+                    </div>
+                    <div class="tabCon" id="tab-6">
+                        <div class="edit">
+                            写入查询出来的结果
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="row">
+                <ul class="nav nav-tabs" data-toggle="tabs" style="padding-left: 18px;">
+                    <li class="active">
+                        <a href="#tab-6">response</a>
+                    </li>
+                    <li>
+                        <a href="#tab-7">日志</a>
+                    </li>
+                </ul>
+                <div class="conBox">
+                    <div class="othCon active" id="tab-6">
+                        response
+                    </div>
+                    <div class="othCon" id="tab-7">
+                        日志
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <button class="btn btn-minw btn-primary ajax-post" target-form="form-builder" type="submit">提交</button>
+</form>
+<style type="text/css">
+
+    .saveBtn{
+        height: 34px;
+        line-height: 34px;
+        width: 80px;
+        border: 1px solid #3675c5;
+        display: inline-block;
+        vertical-align: middle;
+        position: relative;
+        z-index: 1000;
+    }
+    .saveBtn a{
+        color: #fff;
+        display: block;
+        text-align: center;
+        cursor: pointer;
+    }
+    .saveBtn .saveA{
+        display: none;
+        height: 34px;
+        line-height: 34px;
+        width: 80px;
+        border: 1px solid #3675c5;
+        position: absolute;
+        left: -1px;
+        top: 35px;
+
+    }
+    .xlJt{
+        position: absolute;
+        top: 10px;
+        right: 5px;
+        color: #fff;
+    }
+    .addIcon {
+        width: 30px;
+        height: 40px;
+        position: absolute;
+        right: 30px;
+        top: 0;
+        text-align: center;
+        padding: 0;
+        font-weight: 100;
+        line-height: 40px;
+    }
+    .childUl li{
+        position: relative;
+    }
+    .childUl li .del{
+        position: absolute;
+        top: 4px;
+        right: 10px;
+    }
+    .menu-nav-tabs>li {
+        width: 50%;
+        text-align: center;
+        padding: 0;
+    }
+
+    .delBtn {
+        line-height: 34px;
+    }
+    .conMiddle {
+        padding: 15px;
+        background: #fff;
+    }
+
+    .select2-selection__rendered {
+        min-width: auto;
+    }
+
+    .p {
+        line-height: 34px;
+    }
+
+    .mkBox {
+        position: relative;
+    }
+
+    .mkIcon {
+        position: absolute;
+        right: 40px;
+        top: 10px;
+    }
+
+    .marginBotton20 {
+        margin-bottom: 20px;
+    }
+
+    .tabCon {
+        display: none;
+        padding: 20px;
+    }
+
+    .tabCon.active {
+        display: block;
+    }
+
+    .table tbody tr td .delBtn {
+        display: none;
+    }
+
+    .table tbody tr:hover td .delBtn {
+        display: block;
+    }
+
+    .table tbody tr:last-child td .delBtn {
+        display: none;
+    }
+
+    .edit {
+        border: 1px solid #eee;
+        background: #f7f7f7;
+        height: 300px;
+        padding: 20px;
+    }
+    .conBox{
+        padding: 20px;
+    }
+    .othCon{
+        display: none;
+    }
+    .othCon.active{
+        display: block;
+    }
+</style>
+{/block}
+{block name="script"}
+    <script type="text/javascript">
+        var addChildMenu = function(obj) {
+            var addMenu = $(obj).next();
+            var html = '<li><a target="_self"><i class="fa fa-fw fa-tachometer"></i>后台首页</a><a class="glyphicon glyphicon-trash del" onclick="delLi(this)"></a></li>';
+            addMenu.append(html);
+        }
+        var delLi = function(obj){
+            $(obj).parent('li').remove();
+        }
+        var getIndex = function(obj) {
+            var index = $(obj).parents('tr').index();
+            var length = $('.tables tbody tr').length;
+            var html ='<tr><td style="width: 40px;"><div class="col-xs-12"><label class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  "><input type="checkbox" name="checkbox"><span></span> </label></div></td><td><input class="form-control tabval"  oninput="getIndex(this)" name="name" type="text" value=""></td><td><input oninput="getIndex(this)" class="form-control tabval" name="name" type="text" value=""></td><td><input oninput="getIndex(this)" class="form-control tabval" name="remarks" type="text"></td><td width="40px" align="center"><i onclick="delFun(this)" class="glyphicon glyphicon-trash delBtn"></i></td></tr>';
+            console.log(length+'------'+index);
+            if ((index + 1) == length) {
+                $('.tables tbody').append(html);
+            }
+        }
+        var delFun = function(obj){
+
+            $(obj).parents('tr').remove();
+        }
+        var xlFun = function(obj){
+            var type = $(obj).data('type');
+            if(type == 0){
+                $(obj).data('type',1);
+                $('.saveA').css('display','block');
+            }else{
+                $(obj).data('type',0);
+                $('.saveA').css('display','none');
+            }
+        }
+        $(function(){
+            $('.saveA').click(function(){
+                $('.xlJt').data('type',0);
+                $('.saveA').css('display','none');
+            })
+        })
+        $("select[name='tables']").change(function () {
+            data = JSON.stringify($(this).val());
+             $.post({
+                 "url":"{:url('admin/generate_api/get_table_filed')}",
+                 "data":{"tables":data},
+                 "dataType":"json",
+                 "success":function(data){
+                     if(data.code == 0){
+                         layer.alert(data.msg, {
+                             skin: 'layui-layer-molv' //样式类名
+                             ,closeBtn: 0
+                         });
+
+                         return;
+                     }
+                     $.each(data.data,function(index,value){
+                        var txt = '<tr>' +
+                            '                                <td style="width: 40px;">' +
+                            '                                    <div class="col-xs-12">' +
+                            '                                        <label class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  ">' +
+                            '                                            <input type="checkbox" name="field_checkbox['+value.FIELD+']"><span></span> </label>' +
+                            '                                    </div>' +
+                            '                                </td>' +
+                            '                                <td>' + value.COLUMN_NAME + '</td>' +
+                            '                                <td>' +  value.COLUMN_COMMENT + '</td>' +
+                            '                                <td>' + value.IS_NULLABLE +'</td>' +
+                            '                                <td>' +
+                            '                                    <select class="js-select2 form-control" name="field_is_show['+value.FIELD+']" data-allow-clear="true" data-placeholder="请选择字段显示方式">' +
+                            '                                        <option></option>' +
+                            '                                        <option value="1">不显示</option>' +
+                            '                                    </select>' +
+                            '                                </td>' +
+                            '                                <td class="yzgz">' +
+                            '                                    <div class="row yzLine">' +
+                            '                                        <div class="col-xs-5">' +
+                            '                                            <select class="js-select2 form-control" name="field_validate['+value.FIELD+']" data-allow-clear="true" data-placeholder="请选择规则">' +
+                            '                                                <option></option>' +
+                            '                                                <option value="0">不验证</option>' +
+                            '                                                <option value="required">不能为空</option>' +
+                            '                                                <option value="in">范围验证</option>' +
+                            '                                            </select>' +
+                            '                                        </div>' +
+                            '                                        <div class="col-xs-5">' +
+                            '                                            <input class="form-control tabval" name="field_validate_value['+value.FIELD+']" type="text" value="">' +
+                            '                                        </div>' +
+                            '                                        <div class="col-xs-2">' +
+                            '                                            <a class="glyphicon glyphicon-plus" onclick="addGz(this)"></a>' +
+                            '                                            <a class="glyphicon glyphicon-trash" onclick="delGz(this)"></a>' +
+                            '                                        </div>' +
+                            '                                    </div>' +
+                            '' +
+                            '' +
+                            '                                </td>' +
+                            '                                <td align="center">' +
+                            '                                    <i onclick="delFun(this)" class="glyphicon glyphicon-trash delBtn"></i>' +
+                            '                                </td>' +
+                            '                            </tr>';
+
+                         $("#filed-tab-4").append(txt);
+                     });
+                 }
+        });
+        });
+    </script>
+{/block}
+
