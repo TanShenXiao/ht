@@ -12,6 +12,7 @@
 namespace app\common\model;
 
 use think\Db;
+use think\Exception;
 use think\View;
 use think\Validate;
 
@@ -61,6 +62,11 @@ class Api extends BaseGenerate
     protected $public_variable = [];
 
     /**
+     * 基础类前缀
+     */
+    protected $prefix = 'Base';
+
+    /**
      * 构造方法
      * Generate constructor.
      * @param array $data
@@ -101,14 +107,16 @@ class Api extends BaseGenerate
         $temp_type_in = implode(',',array_keys($this->template_function));
         $validate = new Validate([
             'module|模块'             => 'require',
+            'class_name'              => 'require',
             'temp_type|接口类型'      => "require|in:{$temp_type_in}",
-            'comment|函数备注'      => "require",
+            'comment|函数备注'        => "require",
         ]);
-
         if(!$validate->check($this->config))
         {
             $this->error_msg = $validate->getError();return;
         }
+
+        $this->config['class_name'] = ucfirst($this->config['class_name']);
 
         if(!is_file($this->template_base_controller_file)){
             $this->error_msg = '找不到基础摸版控制文件';return;
@@ -118,6 +126,11 @@ class Api extends BaseGenerate
         }
     }
 
+
+    /**
+     * 返回生成代码内容 不生成文件
+     * @return string
+     */
     public function get_content()
     {
         //检测是否通过数据校验
@@ -127,7 +140,6 @@ class Api extends BaseGenerate
         $data['comment'] = $this->Format_remarks($this->config['comment']);
         $data['name'] = $this->config['name'];
         $data['change_date'] = $this->date;
-        $base_name = 'Base';
 
         if(!method_exists($this,$this->config['temp_type'])){
             return '未找到实现的方法';
@@ -140,26 +152,17 @@ class Api extends BaseGenerate
 
     /**
      * 接口创建
+     * @param $content内容 is_review是否是生成预览 1是 0不是
      * @return string
      */
-    public function create()
+    public function create($content)
     {
         //检测是否通过数据校验
-        if($this->error_msg) return $this->error_msg;
-
-        $data = [];
-        $data['comment'] = $this->Format_remarks($this->config['comment']);
-        $data['name'] = $this->config['name'];
         $data['change_date'] = $this->date;
-        $base_name = 'Base';
+        //if($this->error_msg) return ['code' => 1,'msg' => $this->error_msg];
 
-        if(!method_exists($this,$this->config['temp_type'])){
-            return '未找到实现的方法';
-        }
-        $func = $this->config['temp_type'];
-        $content = $this->$func($data);
         //当在没有继承基础类的
-        $base_class_name = $base_name.$this->config['class_name'];
+        $base_class_name = $this->prefix.$this->config['class_name'];
         $base_path = $this->base_controller_path_api.'/'.$base_class_name;
         $base_class = $this->created_namespace($base_path);
         if(!class_exists($base_class)){
@@ -173,12 +176,12 @@ class Api extends BaseGenerate
         $base_file = $this->get_created_path($this->base_controller_path_api,$base_class_name);
 
         //检查其中有没有次方法
-        $Original_content = file_get_contents($base_file);
+        $Original_content = $base_content  = file_get_contents($base_file);
         $reflection = new \ReflectionClass($base_class);
 
-        if($reflection->hasMethod($data['name'])){
+        if($reflection->hasMethod($this->config['name'])){
 
-            $y_content = $this->get_method_content($base_file,$base_class,$data['name']);
+            $y_content = $this->get_method_content($base_file,$base_class,$this->config['name']);
             $Original_content  = str_replace($y_content,$content,$Original_content);
             file_put_contents($base_file,$Original_content);
         }else{
@@ -187,8 +190,15 @@ class Api extends BaseGenerate
 
             file_put_contents($base_file,$Original_content);
         }
+        //自检代码是否有误
+        try{
+            $reflection =  new \ReflectionClass($base_class);
 
-        //前段控制器校验
+        }catch (Exception $e){
+           file_put_contents($base_file,$base_content);
+           return  ['code' => 1,'msg' => '生成代码失败，代码出现语法错误，错误信息为'.$e->getMessage()];
+        }
+
         //当在没有继承基础类的
         $class_name = $this->config['class_name'];
         $path = $this->controller_path_api.'/'.$class_name;
@@ -200,7 +210,11 @@ class Api extends BaseGenerate
             $data['class_name'] = $this->config['class_name'];
             $this->created_file($this->template_controller_file,$this->controller_path_api,$data);
         }
-        echo 'ok';
+
+        $api = url($this->config['module'].'/'.$this->config['class_name'].'/'.$this->config['name']);
+        $api = str_replace('admin.php','api.php',$api);
+
+        return ['code' => 0,'msg' => 'ok','data' => $api];
     }
 
     /**

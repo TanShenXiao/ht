@@ -32,7 +32,7 @@ public function {$name}()
     foreach ($change_data as $key => $item){
         $arr = explode('_',$key,2);
         if(!isset($arr[1])) continue;
-        if(key_exists($arr[0],$this->tables)){
+        if(key_exists($arr[0],$tables)){
             $table = $tables[$arr[0]];
             $insert_data[$table['table']]['data'][$arr[1]] = $item;
             $insert_data[$table['table']]['alias']= $arr[0];
@@ -62,5 +62,5 @@ public function {$name}()
     //字段关系结束
     Db::commit();
 
-    return $this->result($add_id,200,'获取成功','json');
+    return $this->result($add_id,1,'获取成功','json');
 }

@@ -17,6 +17,6 @@ public function {$name}()
 
     }
 
-    return $this->result([],200,'删除失败','json');
+    return $this->result([],1,'删除失败','json');
 
 }

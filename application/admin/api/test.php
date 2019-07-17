@@ -11,10 +11,10 @@
 namespace app\admin\api;
 
 
-use app\admin\api_controller\Basetest;
+use app\admin\api_controller\BaseTest;
 
 
-class test extends Basetest
+class Test extends BaseTest
 {
 
 }

@@ -36,12 +36,12 @@ class GenerateApi extends Admin
         $db_name = config('database.database');
         $tables = Db::query("SELECT TABLE_NAME,TABLE_COMMENT FROM information_schema.TABLES WHERE TABLE_SCHEMA = '{$db_name}'");
         $this->assign('tables',$tables);
-
+        $this->assign('root_api',str_replace('admin.php','api.php',$this->request->root(true)));
         return $this->fetch();
     }
 
     /**
-     * 代码生成
+     * 预览代码生成
      */
     function generate()
     {
@@ -94,7 +94,51 @@ class GenerateApi extends Admin
         $Generate = new Api($data);
         $content = $Generate->get_content();
 
-        $this->success('成功','',$content);
+        $this->success('代码生成成功','',$content);
+    }
+
+    /**
+     * 创建代码
+     */
+    public function create_preview()
+    {
+        if(!$this->request->isAjax()) $this->error('错误的请求方式');
+        $data = input();
+        $created_type = input('create_type');
+        if(!in_array($created_type,[1,2]))
+        {
+            $this->error('错误的提交方式');
+        }
+        if($created_type == 2){
+            $data['module'] = 'temp_test';
+            $data['class_name'] = 'test098f6bcd4621d373cade4e832627b4f6';
+        }
+
+        $validate = new Validate();
+        $validate->rule([
+            'code' => 'require',
+            'module' => 'require',
+            'name' => 'require',
+            'class_name' => 'require',
+        ]);
+        //数据校验
+        if(!$validate->check($data)){
+            $this->error($validate->getError());
+        }
+
+        //将内容中的函数名匹配出来
+        preg_match('/function\s+([A-Za-z_]{1}[A-Za-z_]*?)\s*\(/i',$data['code'],$match);
+        if(!isset($match[1]) or $match[1] != $data['name']){
+            $this->error('函数名被篡改或,找不到函数');
+        }
+
+        $Generate = new Api(['config' => $data]);
+        $created_data = $Generate->create($data['code'],true);
+        if($created_data['code'] == 1){
+            $this->error($created_data['msg']);
+        }
+        $mes = $created_type == 1?'代码生成成功。':'预览代码生成成功';
+        $this->success($mes,'',$created_data['data']);
     }
 
     /**

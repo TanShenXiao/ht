@@ -169,6 +169,8 @@ class BaseGenerate
     protected function get_table($is_master = false)
     {
         $table = [];
+        if(!isset($this->config['table']) or !is_array($this->config['table'])) return [];
+
         foreach ($this->config['table'] as $key => $item){
             if(is_array($item)){
                 $alias = $item[0];
