@@ -33,9 +33,9 @@
                         <i data-type="0" onclick="xlFun(this)" class="glyphicon glyphicon-menu-down xlJt"></i>
                         <a class="btn-primary saveA">保存并发布</a>
                     </div>
-                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="submit" request_type="1">预览代码</button>
-                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="submit" request_type="2" href="{:url('/admin/generate_api/create_preview')}">预览测试</button>
-                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="submit" request_type="3" href="{:url('/admin/generate_api/create_preview')}">同步代码</button>
+                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="button" request_type="1">预览代码</button>
+                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="button" request_type="2" href="{:url('/admin/generate_api/create_preview')}">预览测试</button>
+                    <button class="btn btn-minw btn-primary ajax-self-post" target-form="form-builder" type="button" request_type="3" href="{:url('/admin/generate_api/create_preview')}">同步代码</button>
                     <button class="btn btn-info ajax-self-post"  target-form="form-builder"   type="button" request_type="4">测试</button>
                     <button class="btn btn-warning ajax-self-post" target-form="form-builder" type="button"  onClick="url.select();document.execCommand('Copy')">复制链接</button>
                 </div>
@@ -94,7 +94,7 @@
                                 <th width="40px"></th>
                             </tr>
                             </thead>
-                            <tbody>
+                            <tbody class="tbody">
                             <tr>
                                 <td style="width: 40px;">
                                     <div class="col-xs-12">
@@ -103,13 +103,13 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <input oninput="getIndex(this)" class="form-control tabval" name="param_key_0" type="text" value="">
+                                    <input oninput="getIndex(this)" class="form-control tabval key" name="param_key" type="text" value="" >
                                 </td>
                                 <td>
-                                    <input oninput="getIndex(this)" class="form-control tabval" name="param_value_0" type="text" value="">
+                                    <input oninput="getIndex(this)" class="form-control tabval value" name="param_value" type="text" value="">
                                 </td>
                                 <td>
-                                    <input oninput="getIndex(this)" class="form-control tabval" name="param_remark_0" type="text">
+                                    <input oninput="getIndex(this)" class="form-control tabval remark" name="param_remark" type="text">
                                 </td>
                                 </td>
                                 <td align="center">
@@ -324,11 +324,32 @@
         }
         var getIndex = function(obj) {
             var index = $(obj).parents('tr').index();
-            var length = $('.tables tbody tr').length;
-            var html ='<tr><td style="width: 40px;"><div class="col-xs-12"><label class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  "><input type="checkbox" name="checkbox"><span></span> </label></div></td><td><input class="form-control tabval"  oninput="getIndex(this)" name="name" type="text" value=""></td><td><input oninput="getIndex(this)" class="form-control tabval" name="name" type="text" value=""></td><td><input oninput="getIndex(this)" class="form-control tabval" name="remarks" type="text"></td><td width="40px" align="center"><i onclick="delFun(this)" class="glyphicon glyphicon-trash delBtn"></i></td></tr>';
-            console.log(length+'------'+index);
+            var length = $('.tbody tr').length;
+            var html ='<tr>\n' +
+                '                                <td style="width: 40px;">\n' +
+                '                                    <div class="col-xs-12">\n' +
+                '                                        <label class="css-input css-checkbox css-checkbox-primary css-checkbox-sm css-checkbox-rounded  ">\n' +
+                '                                            <input type="checkbox" name="checkbox"><span></span> </label>\n' +
+                '                                    </div>\n' +
+                '                                </td>\n' +
+                '                                <td>\n' +
+                '                                    <input oninput="getIndex(this)" class="form-control tabval key" name="param_key" type="text" value="" >\n' +
+                '                                </td>\n' +
+                '                                <td>\n' +
+                '                                    <input oninput="getIndex(this)" class="form-control tabval value" name="param_value" type="text" value="">\n' +
+                '                                </td>\n' +
+                '                                <td>\n' +
+                '                                    <input oninput="getIndex(this)" class="form-control tabval remark" name="param_remark" type="text">\n' +
+                '                                </td>\n' +
+                '                                </td>\n' +
+                '                                <td align="center">\n' +
+                '                                    <div>\n' +
+                '                                        <a class="glyphicon glyphicon-trash" onclick="delGz(this)"></a>\n' +
+                '                                    </div>\n' +
+                '                                </td>\n' +
+                '                            </tr>';
             if ((index + 1) == length) {
-                $('.tables tbody').append(html);
+                $('.tables .tbody').append(html);
             }
         }
         var delFun = function(obj){
@@ -432,14 +453,31 @@
             if(!module) {tips('所属模块不能为空。'); return false;};
             if(!class_name) {tips('所属控制器不能为空。'); return false;};
             if(!name) {tips('所属方法不能为空。'); return false;};*/
-
             var form_data = form.serialize();
+            var i;
+            var str = '';
+            for(i=0; i<$(".key").length;i++){
+                var key = $(".key")[i].value;
+                var val = $(".value")[i].value;
+               if(key && val){
+                   str += key+'='+val+"&";
+               }
+            }
+            str = str.replace(/&$/i,"");
+
             //对数据进行操作
             var request_data = form_data.split("&");
+            console.log(request_data);
+            var request_data2 = [];
             $.each(request_data,function(index,data){
-                var value = data.split("=");
-                request_data[index] = value;
+                if(/param_key/i.test(data) || /param_remark/i.test(data) ||  /param_value/i.test(data)){
+
+                }else{
+                    request_data2.push(data);
+                }
             });
+
+            var form_data = request_data2.join('&')+'&'+str;
 
             if(request_type == 2){
                 form_data += '&create_type=2';
