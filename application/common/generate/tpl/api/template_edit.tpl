@@ -58,8 +58,8 @@ public function {$name}($id = '')
         }
         Db::commit();
 
-        return $this->result([],1,'获取成功','json');
+        return $this->result($data,1,'编辑成功','json');
     }
 
-    return $this->result($data,1,'修改成功','json');
+    return $this->result([],0,'编辑失败','json');
 }

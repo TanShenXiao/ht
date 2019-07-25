@@ -92,9 +92,12 @@ class GenerateApi extends Admin
        }
         $data['config'] = $config;
         $Generate = new Api($data);
-        $content = $Generate->get_content();
+        $created_data = $Generate->get_content();
 
-        $this->success('代码生成成功','',$content);
+        if($created_data['code'] == 0){
+            $this->error($created_data['msg']);
+        }
+        $this->success('成功','',$created_data['data']);
     }
 
     /**
@@ -132,9 +135,10 @@ class GenerateApi extends Admin
             $this->error('函数名被篡改或,找不到函数');
         }
 
+        $data['create_type'] = $created_type;
         $Generate = new Api(['config' => $data]);
         $created_data = $Generate->create($data['code'],true);
-        if($created_data['code'] == 1){
+        if($created_data['code'] == 0){
             $this->error($created_data['msg']);
         }
         $mes = $created_type == 1?'代码生成成功。':'预览代码生成成功';

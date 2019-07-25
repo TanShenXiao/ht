@@ -94,6 +94,9 @@ class Api extends BaseGenerate
                 $this->controller_path_api =  APP_PATH."/{$module}/api";
             }
         }
+        if(!isset($this->config['create_type'])){
+            $this->config['create_type'] = 1;
+        }
 
         //数据校验
         $this->validate();
@@ -142,12 +145,12 @@ class Api extends BaseGenerate
         $data['change_date'] = $this->date;
 
         if(!method_exists($this,$this->config['temp_type'])){
-            return '未找到实现的方法';
+            return ['code' => 0,'msg' =>'未找到实现的方法'];
         }
         $func = $this->config['temp_type'];
         $content = $this->$func($data);
 
-        return $content;
+         return ['code' => 1,'data' => $content];
     }
 
     /**
@@ -163,41 +166,50 @@ class Api extends BaseGenerate
 
         //当在没有继承基础类的
         $base_class_name = $this->prefix.$this->config['class_name'];
+        //临时类名用于测试
+        $test_base_class_name = $this->prefix.$this->config['class_name'].'test';
+
         $base_path = $this->base_controller_path_api.'/'.$base_class_name;
         $base_class = $this->created_namespace($base_path);
-        if(!class_exists($base_class)){
 
+        $base_file = $this->get_created_path($this->base_controller_path_api,$base_class_name);
+        if(!class_exists($base_class,true)){
                 $data['use'] = ['app\common\controller\Api','think\Validate'];
                 $data['extends_class'] = 'Api';
                 $data['class_name'] = $base_class_name;
 
             $this->created_file($this->template_base_controller_file,$this->base_controller_path_api,$data);
         }
-        $base_file = $this->get_created_path($this->base_controller_path_api,$base_class_name);
 
         //检查其中有没有次方法
         $Original_content = $base_content  = file_get_contents($base_file);
-        $reflection = new \ReflectionClass($base_class);
 
+        $reflection = new  \ReflectionClass($base_class);
         if($reflection->hasMethod($this->config['name'])){
 
             $y_content = $this->get_method_content($base_file,$base_class,$this->config['name']);
             $Original_content  = str_replace($y_content,$content,$Original_content);
-            file_put_contents($base_file,$Original_content);
         }else{
             $Original_content = file_get_contents($base_file);
             $Original_content =  preg_replace('/\}\s*\?>$|\}\s*$/i',$content."\n}",$Original_content);
-
-            file_put_contents($base_file,$Original_content);
         }
-        //自检代码是否有误
+        //将类的名字改变来验证他是否错误
+        $Original_content = preg_replace("/class\s*{$base_class_name}/i","class ".$test_base_class_name,$Original_content);
+        file_put_contents($base_file,$Original_content);
+
+        //类检测
         try{
-            $reflection =  new \ReflectionClass($base_class);
+            //改变类的名字 引用判断错误
 
-        }catch (Exception $e){
-           file_put_contents($base_file,$base_content);
-           return  ['code' => 1,'msg' => '生成代码失败，代码出现语法错误，错误信息为'.$e->getMessage()];
+            require $base_file;  //引入类文件检测是否报错
+
+        }catch (\Error $e){
+            file_put_contents($base_file,$base_content);
+            return  ['code' => 0,'msg' => '生成代码失败，代码出现语法错误，错误信息为'.$e->getMessage()];
         }
+        //验证成功将类名提花回来
+        $Original_content = preg_replace("/class \s*{$test_base_class_name}/i","class ".$base_class_name,$Original_content);
+        file_put_contents($base_file,$Original_content);
 
         //当在没有继承基础类的
         $class_name = $this->config['class_name'];
@@ -214,7 +226,7 @@ class Api extends BaseGenerate
         $api = url($this->config['module'].'/'.$this->config['class_name'].'/'.$this->config['name']);
         $api = str_replace('admin.php','api.php',$api);
 
-        return ['code' => 0,'msg' => 'ok','data' => $api];
+        return ['code' => 1,'msg' => 'ok','data' => $api];
     }
 
     /**

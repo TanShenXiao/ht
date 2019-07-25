@@ -62,5 +62,5 @@ public function {$name}()
     //字段关系结束
     Db::commit();
 
-    return $this->result($add_id,1,'获取成功','json');
+    return $this->result($add_id,1,'添加成功','json');
 }
